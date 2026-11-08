@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      # Bootstrap only: remove --passWithNoTests when the first tests are added.
+      - run: npm test -- --passWithNoTests
+      - name: Build application when source exists
+        if: hashFiles('src/**/*.ts') != ''
+        run: npm run build

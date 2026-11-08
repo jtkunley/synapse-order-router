@@ -1,0 +1,20 @@
+# Prepared for the future src/server.ts application entrypoint.
+# The build becomes runnable after application code is added.
+FROM node:26-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json tsconfig.build.json ./
+COPY src ./src
+RUN npm run build
+
+FROM node:26-bookworm-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=build /app/dist ./dist
+COPY data ./data
+USER node
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
