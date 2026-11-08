@@ -21,7 +21,7 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 - App code must not read `process.env` directly; use `getEnv()`.
 - Keep HTTP in controllers; keep routing/catalog logic in services.
 - One concern per file when practical (endpoint, middleware, model).
-- Use `@jtkunley/logger` for process logging in server/runtime paths.
+- Use the built-in console for lightweight process logging in server/runtime paths.
 - Register middleware before controllers; error handler last in `app.ts`.
 - Prefer exact dependency versions; match existing TypeScript/ESM style (`.js` import specifiers).
 - When committing, split outstanding changes into gradual commits by concern (e.g. one service split, then controller wiring, then tests/docs)—never one catch-all commit for unrelated work.

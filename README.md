@@ -45,7 +45,6 @@ Assessment catalog inputs live in `data/` (`products.csv`, `suppliers.csv`,
 - Zod + zod-openapi — one schema for validation, types, and OpenAPI
 - csv-parse — product and supplier catalog loading
 - Vitest + Supertest — unit and HTTP component tests
-- `@jtkunley/logger` — process logging
 - Docker — multi-stage production image
 
 ## Commands

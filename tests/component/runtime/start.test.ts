@@ -8,8 +8,6 @@ const {
   enableServerErrorHandling,
   enableGracefulShutdown,
   handleFatalError,
-  child,
-  rootLogger,
 } = vi.hoisted(() => {
   const listen = vi.fn(function listen(
     this: object,
@@ -20,11 +18,6 @@ const {
     callback?.();
     return this;
   });
-  const child = { info: vi.fn(), error: vi.fn() };
-  const rootLogger = {
-    child: vi.fn(() => child),
-    flush: vi.fn(async () => undefined),
-  };
   return {
     listen,
     createApp: vi.fn(() => ({ listen })),
@@ -32,9 +25,7 @@ const {
     getEnv: vi.fn(() => ({ port: 3000, dataDir: '/tmp/data' })),
     enableServerErrorHandling: vi.fn(),
     enableGracefulShutdown: vi.fn(),
-    handleFatalError: vi.fn(async () => undefined as never),
-    child,
-    rootLogger,
+    handleFatalError: vi.fn(() => undefined as never),
   };
 });
 
@@ -46,10 +37,6 @@ vi.mock('../../../src/runtime/fatal-error.js', () => ({
   handleFatalError,
 }));
 vi.mock('../../../src/runtime/graceful-shutdown.js', () => ({ enableGracefulShutdown }));
-vi.mock('@jtkunley/logger', () => ({
-  logger: { init: vi.fn(() => rootLogger) },
-}));
-
 describe('start', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -59,10 +46,12 @@ describe('start', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
   it('loads config and catalog, listens, and wires runtime handlers', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     const { start } = await import('../../../src/runtime/start.js');
     await start();
 
@@ -72,7 +61,7 @@ describe('start', () => {
     expect(listen).toHaveBeenCalledWith(3000, '0.0.0.0', expect.any(Function));
     expect(enableServerErrorHandling).toHaveBeenCalled();
     expect(enableGracefulShutdown).toHaveBeenCalled();
-    expect(child.info).toHaveBeenCalledWith('Order router listening', { port: 3000 });
+    expect(info).toHaveBeenCalledWith('Order router listening', { port: 3000 });
   });
 
   it('delegates startup failures to handleFatalError', async () => {
@@ -81,6 +70,6 @@ describe('start', () => {
     });
     const { start } = await import('../../../src/runtime/start.js');
     await start();
-    expect(handleFatalError).toHaveBeenCalledWith(rootLogger, expect.any(Error));
+    expect(handleFatalError).toHaveBeenCalledWith(expect.any(Error));
   });
 });

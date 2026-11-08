@@ -1,30 +1,20 @@
 import { EventEmitter } from 'node:events';
 import type { Server } from 'node:http';
-import type { RootLogger } from '@jtkunley/logger';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { enableServerErrorHandling, handleFatalError } from '../../../src/runtime/fatal-error.js';
 
-function mockRootLogger() {
-  const child = {
-    error: vi.fn(),
-    info: vi.fn(),
-  };
-  const rootLogger = {
-    child: vi.fn(() => child),
-    flush: vi.fn(async () => undefined),
-  } as unknown as RootLogger;
-  return { rootLogger, child };
-}
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('handleFatalError', () => {
-  it('logs, flushes, and exits with code 1', async () => {
-    const { rootLogger, child } = mockRootLogger();
+  it('logs and exits with code 1', () => {
+    const output = { error: vi.fn() };
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
 
-    await handleFatalError(rootLogger, new Error('boom'), 'failed');
+    handleFatalError(new Error('boom'), 'failed', output);
 
-    expect(child.error).toHaveBeenCalledWith('failed', expect.any(Error), {});
-    expect(rootLogger.flush).toHaveBeenCalled();
+    expect(output.error).toHaveBeenCalledWith('failed', expect.any(Error));
     expect(exit).toHaveBeenCalledWith(1);
     exit.mockRestore();
   });
@@ -32,15 +22,15 @@ describe('handleFatalError', () => {
 
 describe('enableServerErrorHandling', () => {
   it('routes server errors through handleFatalError', async () => {
-    const { rootLogger, child } = mockRootLogger();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
     const server = new EventEmitter() as Server;
 
-    enableServerErrorHandling(server, rootLogger);
+    enableServerErrorHandling(server);
     server.emit('error', new Error('listen failed'));
     await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
 
-    expect(child.error).toHaveBeenCalled();
+    expect(error).toHaveBeenCalled();
     exit.mockRestore();
   });
 });
