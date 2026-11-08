@@ -1,10 +1,11 @@
 import type { Express } from 'express';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
 import type { Catalog } from '../models/catalog.js';
+import { jsonBody } from '../middleware/json-body.js';
 import { orderSchema } from '../models/order.js';
 import { responseSchema } from '../models/routing.js';
 import type { RoutingFailure } from '../models/routing.js';
-import { routeOrder } from '../services/router.js';
+import { routeOrder } from '../services/routing/index.js';
 
 export const routePath = '/api/route';
 
@@ -26,7 +27,8 @@ export const routePaths: ZodOpenApiPathsObject = {
   },
 };
 
-export function registerRoute(app: Express, catalog: Catalog): void {
+export function addRoute(app: Express, catalog: Catalog): void {
+  app.use(routePath, jsonBody);
   app.post(routePath, (request, response) => {
     const order = orderSchema.safeParse(request.body);
     if (!order.success) {

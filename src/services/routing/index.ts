@@ -1,0 +1,22 @@
+import type { Catalog } from '../../models/catalog.js';
+import type { Order } from '../../models/order.js';
+import type { RoutingResponse } from '../../models/routing.js';
+import { buildCategoryBits } from './build-category-bits.js';
+import { buildRouting } from './build-routing.js';
+import { findEligibleCandidates } from './find-eligible-candidates.js';
+import { normalizeItems } from './normalize-items.js';
+import { selectSuppliers } from './select-suppliers.js';
+import { uncoverableErrors } from './uncoverable-errors.js';
+
+export function routeOrder(order: Order, catalog: Catalog): RoutingResponse {
+  const { items, errors } = normalizeItems(order, catalog);
+  if (errors.length) return { feasible: false, errors };
+
+  const { categoryBits, fullMask } = buildCategoryBits(items);
+  const candidates = findEligibleCandidates(order, catalog, categoryBits);
+  const uncovered = uncoverableErrors(order, items, candidates, categoryBits, fullMask);
+  if (uncovered) return { feasible: false, errors: uncovered };
+
+  const selected = selectSuppliers(candidates, fullMask, [...categoryBits.values()]);
+  return { feasible: true, routing: buildRouting(items, selected) };
+}

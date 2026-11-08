@@ -1,7 +1,7 @@
 import { logger } from '@jtkunley/logger';
 import { createApp } from '../app.js';
 import { getEnv } from '../config/env.js';
-import { loadCatalog } from '../services/catalog.js';
+import { loadCatalog } from '../services/catalog/index.js';
 import { enableServerErrorHandling, handleFatalError } from './fatal-error.js';
 import { enableGracefulShutdown } from './graceful-shutdown.js';
 

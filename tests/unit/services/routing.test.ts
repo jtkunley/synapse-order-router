@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { routeOrder } from '../../../src/services/router.js';
+import { routeOrder } from '../../../src/services/routing/index.js';
 import { makeCatalog, makeOrder, makeSupplier } from '../../helpers/catalog.js';
 
 describe('routeOrder', () => {

@@ -39,7 +39,7 @@ const {
 });
 
 vi.mock('../../../src/app.js', () => ({ createApp }));
-vi.mock('../../../src/services/catalog.js', () => ({ loadCatalog }));
+vi.mock('../../../src/services/catalog/index.js', () => ({ loadCatalog }));
 vi.mock('../../../src/config/env.js', () => ({ getEnv }));
 vi.mock('../../../src/runtime/fatal-error.js', () => ({
   enableServerErrorHandling,
