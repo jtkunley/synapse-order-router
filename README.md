@@ -43,9 +43,10 @@ TypeScript is pinned to a version supported by the lint tooling.
 | `npm run test:component` | Run HTTP component tests                            |
 | `npm run test:watch`     | Watch tests during development                      |
 | `npm run test:coverage`  | Generate V8 coverage reports                        |
-| `npm run dev`            | Watch the future `src/server.ts` entrypoint         |
-| `npm run build`          | Compile future application source into `dist/`      |
-| `npm start`              | Run the future compiled `dist/server.js` entrypoint |
+| `npm run dev`            | Watch `src/main.ts` during development              |
+| `npm run build`          | Compile application source into `dist/`             |
+| `npm start`              | Run the compiled `dist/main.js` entrypoint locally  |
+| `npm run docker:run`     | Build the Docker image and start the app in a container |
 
 The test commands intentionally fail when no tests exist. To verify discovery during
 this setup-only stage, run `npm test -- --passWithNoTests`. CI temporarily uses that
@@ -68,16 +69,16 @@ tests/fixtures/       Small controlled CSV/JSON test inputs
 Component tests will exercise the Express application through Supertest without
 starting a persistent listening server. No test implementations are included yet.
 
-## Docker (after implementation)
+## Docker
 
 ```sh
-docker build -t synapse-order-router .
-docker run --rm -p 3000:3000 synapse-order-router
+npm run docker:run
+# or: ./scripts/run.sh
 ```
 
-The prepared multi-stage Dockerfile compiles the application and installs only
-runtime dependencies in the final image, which runs as a non-root user.
-No Docker build has been verified at the setup stage.
+Builds the multi-stage image and runs the container on port 3000 (`PORT` overrides
+the host port). The image compiles the app, installs runtime dependencies only, and
+runs as a non-root user.
 
 ## Assessment records
 

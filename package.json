@@ -13,6 +13,7 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc --project tsconfig.build.json",
     "start": "node dist/main.js",
+    "docker:run": "bash scripts/run.sh",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
