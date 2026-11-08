@@ -1,13 +1,14 @@
+import { pathToFileURL } from 'node:url';
 import { logger } from '@jtkunley/logger';
 import { createApp } from './app.js';
-import { loadCatalog } from './services/catalog.js';
 import { getEnv } from './config/env.js';
 import { enableServerErrorHandling, handleFatalError } from './runtime/fatal-error.js';
 import { enableGracefulShutdown } from './runtime/graceful-shutdown.js';
+import { loadCatalog } from './services/catalog.js';
 
 const rootLogger = logger.init('synapse-order-router');
 
-async function start(): Promise<void> {
+export async function start(): Promise<void> {
   try {
     const { port, dataDir } = getEnv();
     const log = rootLogger.child('server', 'start');
@@ -22,4 +23,7 @@ async function start(): Promise<void> {
   }
 }
 
-await start();
+const entry = process.argv[1];
+if (entry && import.meta.url === pathToFileURL(entry).href) {
+  await start();
+}
