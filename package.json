@@ -26,6 +26,7 @@
     "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "dependencies": {
+    "@jtkunley/logger": "1.0.0",
     "csv-parse": "7.0.3",
     "express": "5.3.0",
     "zod": "4.6.7",
