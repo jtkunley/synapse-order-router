@@ -308,4 +308,96 @@ describe('routeOrder', () => {
     if (!routed.feasible) return;
     expect(routed.routing[0]?.supplier_id).toBe('SUP-A');
   });
+
+  it('improves on a suboptimal greedy cover and ignores irrelevant suppliers', () => {
+    const catalog = makeCatalog(
+      {
+        A: 'a',
+        B: 'b',
+        C: 'c',
+        D: 'd',
+        E: 'e',
+        F: 'f',
+      },
+      [
+        makeSupplier({
+          id: 'GREEDY-WIDE',
+          categories: new Set(['a', 'b', 'c', 'd']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 1,
+        }),
+        makeSupplier({
+          id: 'OPT-LEFT',
+          categories: new Set(['a', 'b', 'e']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 1,
+        }),
+        makeSupplier({
+          id: 'OPT-RIGHT',
+          categories: new Set(['c', 'd', 'f']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 1,
+        }),
+        makeSupplier({
+          id: 'SINGLE-E',
+          categories: new Set(['e']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 1,
+        }),
+        makeSupplier({
+          id: 'SINGLE-F',
+          categories: new Set(['f']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 1,
+        }),
+        makeSupplier({
+          id: 'IRRELEVANT',
+          categories: new Set(['zzz']),
+          zipRanges: [{ start: 10001, end: 10001 }],
+          rating: 10,
+        }),
+      ],
+    );
+
+    const routed = routeOrder(
+      makeOrder({
+        items: ['A', 'B', 'C', 'D', 'E', 'F'].map((product_code) => ({
+          product_code,
+          quantity: 1,
+        })),
+      }),
+      catalog,
+    );
+    expect(routed.feasible).toBe(true);
+    if (!routed.feasible) return;
+    expect(routed.routing.map((group) => group.supplier_id).sort()).toEqual([
+      'OPT-LEFT',
+      'OPT-RIGHT',
+    ]);
+  });
+
+  it('reports infeasible mail-order failures when no supplier can cover a category', () => {
+    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
+      makeSupplier({
+        id: 'SUP-REMOTE',
+        categories: new Set(['oxygen']),
+        zipRanges: [{ start: 20000, end: 20000 }],
+        canMailOrder: true,
+        rating: 9,
+      }),
+    ]);
+
+    expect(
+      routeOrder(
+        makeOrder({
+          mail_order: true,
+          items: [{ product_code: 'WC-1', quantity: 1 }],
+        }),
+        catalog,
+      ),
+    ).toEqual({
+      feasible: false,
+      errors: ['No eligible supplier for WC-1 (wheelchair) at ZIP 10001 with mail order allowed.'],
+    });
+  });
 });
