@@ -69,13 +69,22 @@ placement or shipment booking.
 
 ## Policies the assessment leaves open
 
-These need explicit implementation decisions; no defaults are established here.
+These need explicit implementation decisions; no defaults are established in the
+assessment brief. Choices below are what this repository implements.
 
 1. **OPEN-001** — Mail-order permission: whether local suppliers without national shipping remain eligible when `mail_order` is true.
+   - **Choice:** Yes. ZIP-local suppliers stay eligible even when they cannot mail.
 2. **OPEN-002** — Shipment counting: whether each selected supplier counts as one shipment.
+   - **Choice:** Yes. Minimize the number of selected suppliers.
 3. **OPEN-003** — Ratings: how to compare unrated suppliers and combine ratings for split orders.
+   - **Choice:** Unrated suppliers score `0`. Split-plan quality is the sum of selected supplier scores.
 4. **OPEN-004** — Similar ratings: what rating difference permits local preference.
+   - **Choice:** Plans within `0.5 × supplier_count` of the best total score compete on local preference (`SIMILAR_RATING_DIFFERENCE`).
 5. **OPEN-005** — Ties: how to choose consistently between equally preferred routes.
+   - **Choice:** Prefer lower mail-shipment count, then higher score, then lexicographically smaller joined supplier-id sets.
 6. **OPEN-006** — Item allocation: whether quantities may be split, repeated product lines are combined, or partial assignments are returned on failure.
+   - **Choice:** Combine duplicate product lines. Assign each product to one supplier (no quantity splitting). Fail the whole order when any item is uncoverable.
 7. **OPEN-007** — Validation and data quality: exact field constraints and treatment of unknown products, malformed reference data, and duplicate identifiers.
+   - **Choice:** Reject malformed catalog data at load time. Unknown products and invalid orders return `feasible: false` with `errors` (HTTP 200).
 8. **OPEN-008** — Fulfillment modes: naming of mode values beyond the illustrated `local`, and classification when a supplier qualifies both locally and by mail.
+   - **Choice:** Modes are `local` and `mail_order`. A supplier that covers the ZIP is recorded as `local` even if it can also mail.
