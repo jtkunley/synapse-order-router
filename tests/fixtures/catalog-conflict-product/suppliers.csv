@@ -1,0 +1,2 @@
+supplier_id,supplier_name,service_zips,product_categories,customer_satisfaction_score,can_mail_order?
+SUP-1,One,10001,wheelchair,5,y

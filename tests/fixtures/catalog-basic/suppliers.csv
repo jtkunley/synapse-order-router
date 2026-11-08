@@ -1,0 +1,4 @@
+supplier_id,suplier_name,service_zips,product_categories,customer_satisfaction_score,can_mail_order?
+SUP-LOCAL,Local Only,"10001, 02130","wheelchair, oxygen",8,n
+SUP-MAIL,Mail National,00100-99999,"wheelchair, oxygen, cpap",7,y
+SUP-RANGE,Range Boston,02100-02140,cpap,no ratings yet,n
