@@ -1,6 +1,6 @@
 # AI Prompts
 
-Chronological high-signal prompts for an external reviewer. Train of thought, not every utterance.
+Chronological high-signal prompts for an external reviewer. This is a concise decision trail, not a transcript.
 
 ## Stack and setup
 
@@ -35,3 +35,4 @@ Chronological high-signal prompts for an external reviewer. Train of thought, no
 - Split catalog and routing into one function per file under `services/`; each folder exports its public API via `index.ts` (no separate `business-logic/` tree).
 - Controllers own path, middleware, and handler; `app.ts` only mounts those route modules.
 - Expose OpenAPI as JSON and an interactive `/docs` viewer for schema review.
+- Bundle Swagger UI locally so `/docs` remains available without an external CDN.

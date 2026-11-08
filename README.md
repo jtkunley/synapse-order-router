@@ -43,6 +43,7 @@ Assessment catalog inputs live in `data/` (`products.csv`, `suppliers.csv`,
 
 - Node.js 26 / Express 5 / TypeScript (ESM)
 - Zod + zod-openapi — one schema for validation, types, and OpenAPI
+- swagger-ui-dist — self-contained interactive API documentation
 - csv-parse — product and supplier catalog loading
 - Vitest + Supertest — unit and HTTP component tests
 - Docker — multi-stage production image
