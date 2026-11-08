@@ -1,94 +1,94 @@
 # Synapse Order Router
 
-Repository setup for the Synapse Health multi-supplier order routing assessment.
-No application code, API schemas, routing logic, or tests have been added yet.
+HTTP service that routes multi-item durable-medical-equipment orders to eligible
+suppliers. Built for the Synapse Health take-home assessment.
 
-See [Business Rules](BUSINESS_RULES.md) for the business behavior, required rules,
-and open policy decisions left by the assessment. Rule→test coverage is in
-[Business Rules Coverage](BUSINESS_RULES_COVERAGE.md).
+Authoritative behavior: [BUSINESS_RULES.md](./BUSINESS_RULES.md). Rule→test matrix:
+[BUSINESS_RULES_COVERAGE.md](./BUSINESS_RULES_COVERAGE.md). Project conventions:
+[CLAUDE.md](./CLAUDE.md). Prompt trail: [AI_PROMPTS.md](./AI_PROMPTS.md).
 
-## Requirements
-
-- Node.js 26 (see `.nvmrc`)
-- npm 11
-- Docker, when running the eventual containerized service
+## Quick start
 
 ```sh
 nvm use
 npm ci
+npm run dev          # http://localhost:3000
+# or
+npm run docker:run   # build image and run the container on port 3000
 ```
+
+| URL                 | Purpose                                                |
+| ------------------- | ------------------------------------------------------ |
+| `POST /api/route`   | Route an order; always HTTP 200, outcome in `feasible` |
+| `GET /openapi.json` | OpenAPI 3.1 document (Zod-sourced)                     |
+| `GET /docs`         | Interactive OpenAPI viewer (Swagger UI)                |
+
+Example:
+
+```sh
+curl -s http://localhost:3000/api/route \
+  -H 'content-type: application/json' \
+  -d '{
+    "order_id": "ORD-1",
+    "customer_zip": "10001",
+    "mail_order": false,
+    "items": [{"product_code": "WC-STD-001", "quantity": 1}]
+  }'
+```
+
+Assessment catalog inputs live in `data/` (`products.csv`, `suppliers.csv`,
+`sample_orders.json`). Override with `DATA_DIR`. Port defaults to `3000` (`PORT`).
 
 ## Stack
 
-- Express: HTTP service
-- Zod: runtime validation and inferred TypeScript types
-- zod-openapi: OpenAPI generation from the same schemas
-- csv-parse: supplier and product CSV parsing
-- Vitest: unit and component test runner
-- Supertest: HTTP component tests
-- TypeScript, tsx, ESLint, and Prettier: development tooling
-
-Dependencies are pinned and `package-lock.json` is committed for repeatable installs.
-TypeScript is pinned to a version supported by the lint tooling.
+- Node.js 26 / Express 5 / TypeScript (ESM)
+- Zod + zod-openapi — one schema for validation, types, and OpenAPI
+- csv-parse — product and supplier catalog loading
+- Vitest + Supertest — unit and HTTP component tests
+- `@jtkunley/logger` — process logging
+- Docker — multi-stage production image
 
 ## Commands
 
-| Command                  | Purpose                                             |
-| ------------------------ | --------------------------------------------------- |
-| `npm run check`          | Type checking, linting, and formatting checks       |
-| `npm run format`         | Apply formatting                                    |
-| `npm run lint:fix`       | Apply automatic lint fixes                          |
-| `npm test`               | Run all tests                                       |
-| `npm run test:unit`      | Run unit tests                                      |
-| `npm run test:component` | Run HTTP component tests                            |
-| `npm run test:watch`     | Watch tests during development                      |
-| `npm run test:coverage`  | Generate V8 coverage reports                        |
-| `npm run dev`            | Watch `src/main.ts` during development              |
-| `npm run build`          | Compile application source into `dist/`             |
-| `npm start`              | Run the compiled `dist/main.js` entrypoint locally  |
-| `npm run docker:run`     | Build the Docker image and start the app in a container |
-
-The test commands intentionally fail when no tests exist. To verify discovery during
-this setup-only stage, run `npm test -- --passWithNoTests`. CI temporarily uses that
-flag; remove it when the first tests are added.
-
-The development, build, start, and Docker commands require application source, which
-is intentionally absent. They are prepared for `src/server.ts` and should be verified
-when implementation begins.
+| Command                                | Purpose                                                |
+| -------------------------------------- | ------------------------------------------------------ |
+| `npm run dev`                          | Watch-mode server (`src/main.ts`)                      |
+| `npm run build` / `npm start`          | Compile to `dist/` and run locally                     |
+| `npm run docker:run`                   | Build image and start the container (`scripts/run.sh`) |
+| `npm test`                             | Unit + component tests                                 |
+| `npm run test:unit` / `test:component` | Layer-scoped suites                                    |
+| `npm run test:coverage`                | V8 coverage                                            |
+| `npm run check`                        | Typecheck, lint, format check                          |
 
 ## Layout
 
 ```text
-src/                  Future application code
-data/                Assessment CSV/JSON inputs (not copied yet)
-tests/unit/           Future isolated routing and normalization tests
-tests/component/      Future HTTP tests using the real loader and router
-tests/fixtures/       Small controlled CSV/JSON test inputs
+src/main.ts            Process entry; calls runtime start()
+src/app.ts             Express wiring (mount controllers, error handler)
+src/config/            getEnv() — sole process.env reader
+src/controllers/       One file per HTTP endpoint
+src/middleware/        Request/response middleware
+src/models/            Zod schemas and inferred types
+src/services/catalog/  CSV catalog load (index exports loadCatalog)
+src/services/routing/  Order routing (index exports routeOrder)
+src/runtime/           Boot, fatal errors, graceful shutdown
+data/                  Assessment CSV/JSON inputs
+tests/unit|component/  Mirrored *.test.ts layout
 ```
 
-Component tests will exercise the Express application through Supertest without
-starting a persistent listening server. No test implementations are included yet.
+## Routing summary
+
+Selection priorities (see `BUS_RULE-015`…`020`): feasibility → fewer shipments →
+higher satisfaction → local preference when ratings are similar. Open-policy
+choices are recorded under **Implemented open-policy choices** in
+[BUSINESS_RULES.md](./BUSINESS_RULES.md).
 
 ## Docker
 
 ```sh
 npm run docker:run
-# or: ./scripts/run.sh
+# host port: PORT=8080 npm run docker:run
 ```
 
-Builds the multi-stage image and runs the container on port 3000 (`PORT` overrides
-the host port). The image compiles the app, installs runtime dependencies only, and
-runs as a non-root user.
-
-## Assessment records
-
-`AI_PROMPTS.md` records significant prompts used during planning and setup.
-Continue that chronological record during implementation.
-
-## Dependency audit at setup
-
-The installed lint tooling currently reports a moderate `minimatch` denial-of-service
-advisory (GHSA-g3hv-75wg-m249), propagated through development dependencies. npm offers
-no compatible automatic fix; its forced fix changes the selected lint versions.
-No forced downgrade or major-version dependency override has been applied.
-Recheck with `npm audit` when dependencies are updated.
+Multi-stage image: compile in build stage, runtime deps only in final image, runs
+as non-root `node` user.
