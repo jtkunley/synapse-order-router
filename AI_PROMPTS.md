@@ -1,12 +1,36 @@
 # AI Prompts
 
-High-signal prompts only, chronological.
+Chronological high-signal prompts for an external reviewer. Train of thought, not every utterance.
 
-- Compare Python, Go, and C# for the assessment’s four-hour limit; choose TypeScript as the strongest language, with a minimal implementation plus unit and component tests.
+## Stack and setup
+
+- Compare Python, Go, and C# for the assessment’s four-hour limit.
+- Choose TypeScript (strongest language); keep the implementation minimal, with unit and component tests.
 - Prefer Zod over Joi/OpenAPI YAML so validation, types, and API docs share one definition.
 - Set up the repository with pinned dependencies and tooling before application code.
 - Document business rules from the assessment, separating hard requirements from open policy decisions.
-- Structure the service by concern: controllers (one file per endpoint), models, middleware, services for routing/catalog logic, config via `getEnv()`, and runtime for process boot/shutdown; use `@jtkunley/logger` for process logging.
-- Verify the implementation against `BUSINESS_RULES.md`; keep `POST /api/route` on HTTP 200 and communicate outcomes with `feasible`.
+
+## Application shape
+
+- Controllers: one file per HTTP endpoint. Models hold business schemas/types. Express middleware lives in `middleware/`; registration order is owned by `app.ts`.
+- Outcomes stay HTTP 200 with `feasible` (aligned to `BUSINESS_RULES.md`, not status-code mapping).
+- Use `@jtkunley/logger` and dedicated graceful-shutdown / fatal-error handling under `runtime/` (not nested with middleware).
+- `start()` owns boot errors; all `process.env` access goes through `getEnv()`.
+- Domain order-routing belongs in `services/`, separate from Express wiring.
+- Thin `main.ts` only calls `start()` in `runtime/`; keep `app.ts` at `src/` root.
+
+## Rules and conventions
+
+- Diff the implementation against `BUSINESS_RULES.md` and fix hard conflicts.
 - Capture lasting project conventions in `CLAUDE.md`.
-- Add tests that mirror `src/` (`*.test.ts`), covering application code except pure type definitions, and prefer behavior coverage over coverage-only helpers.
+
+## Tests
+
+- Unit tests first, then mirrored `*.test.ts` layout matching `src/` (skip pure type-only models).
+- Prefer real behavior coverage over test-only helpers extracted for line counts.
+- Cover `BUSINESS_RULES.md` in tests, especially component tests for `POST /api/route`.
+
+## Service and HTTP modules
+
+- Split catalog and routing into one function per file under `services/`; each folder exports its public API via `index.ts` (no separate `business-logic/` tree).
+- Controllers own path, middleware, and handler; `app.ts` only mounts those route modules.
