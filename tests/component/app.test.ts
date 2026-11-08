@@ -14,12 +14,17 @@ describe('createApp', () => {
   ]);
 
   // BUS_RULE-021, BUS_RULE-022
-  it('disables x-powered-by and serves openapi plus routing', async () => {
+  it('disables x-powered-by and serves openapi, docs, and routing', async () => {
     const app = createApp(catalog);
     const openapi = await request(app).get('/openapi.json');
     expect(openapi.status).toBe(200);
     expect(openapi.body.openapi).toBe('3.1.0');
     expect(openapi.headers['x-powered-by']).toBeUndefined();
+
+    const docs = await request(app).get('/docs');
+    expect(docs.status).toBe(200);
+    expect(docs.type).toMatch(/html/);
+    expect(docs.text).toContain('/openapi.json');
 
     const routed = await request(app)
       .post('/api/route')

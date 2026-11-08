@@ -34,3 +34,4 @@ Chronological high-signal prompts for an external reviewer. Train of thought, no
 
 - Split catalog and routing into one function per file under `services/`; each folder exports its public API via `index.ts` (no separate `business-logic/` tree).
 - Controllers own path, middleware, and handler; `app.ts` only mounts those route modules.
+- Expose OpenAPI as JSON and an interactive `/docs` viewer for schema review.
