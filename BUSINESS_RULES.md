@@ -1,7 +1,6 @@
 # Business Rules
 
-Based on the instructions and sample orders attached to the
-[Synapse Health assessment email](https://mail.google.com/mail/#all/1a1ad2a187ac455c).
+Based on the instructions and sample orders provided with the Synapse Health assessment.
 
 Normative requirements use `BUS_RULE-xxx`. Tests that assert a rule cite that id
 in a comment. Policies the assessment leaves open use `OPEN-xxx` and are not
