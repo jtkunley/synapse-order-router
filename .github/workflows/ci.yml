@@ -18,8 +18,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      # Bootstrap only: remove --passWithNoTests when the first tests are added.
-      - run: npm test -- --passWithNoTests
+      - run: npm test
       - name: Build application when source exists
         if: hashFiles('src/**/*.ts') != ''
         run: npm run build
