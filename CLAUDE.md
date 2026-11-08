@@ -24,10 +24,12 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 - Use `@jtkunley/logger` for process logging in server/runtime paths.
 - Register middleware before controllers; error handler last in `app.ts`.
 - Prefer exact dependency versions; match existing TypeScript/ESM style (`.js` import specifiers).
+- When committing, split outstanding changes into gradual commits by concern (e.g. one service split, then controller wiring, then tests/docs)—never one catch-all commit for unrelated work.
 
 ## Business behavior
 
-- Authoritative product rules: `BUSINESS_RULES.md`.
+- Authoritative product rules: `BUSINESS_RULES.md` (`BUS_RULE-xxx`; open policies `OPEN-xxx`).
+- Tests that assert a rule cite it in a comment (`// BUS_RULE-001` or `// BUS_RULE-001, BUS_RULE-022`).
 - `POST /api/route` returns routing decisions; `feasible` is the business outcome flag.
 - Do not invent stock, pricing, capacity, or delivery-time rules.
 - When changing routing behavior, update or reconcile `BUSINESS_RULES.md` open-policy decisions.
