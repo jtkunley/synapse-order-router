@@ -8,6 +8,13 @@ import { normalizeItems } from './normalize-items.js';
 import { selectSuppliers } from './select-suppliers.js';
 import { uncoverableErrors } from './uncoverable-errors.js';
 
+/**
+ * Route one order against the loaded catalog.
+ *
+ * Pipeline: normalize → category bitmasks → eligibility → uncoverable check →
+ * select (BUS_RULE-015…020) → response shape. Failures always use `feasible: false`
+ * with errors; successes assign every requested quantity (BUS_RULE-027).
+ */
 export function routeOrder(order: Order, catalog: Catalog): RoutingResponse {
   const { items, errors } = normalizeItems(order, catalog);
   if (errors.length) return { feasible: false, errors };

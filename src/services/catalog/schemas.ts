@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { Supplier } from '../../models/supplier.js';
 
+/** Zod parsers for the assessment CSV column shapes (BUS_RULE-004…007, BUS_RULE-008). */
+
 const text = z.string().trim().min(1);
 const category = text.toLowerCase();
 

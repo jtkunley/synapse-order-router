@@ -1,6 +1,7 @@
 import { compareText } from './compare-text.js';
 import type { OrderItem } from './types.js';
 
+/** Map each distinct order category to a bit so coverage can be tracked as a mask. */
 export function buildCategoryBits(items: readonly OrderItem[]): {
   categoryBits: Map<string, bigint>;
   fullMask: bigint;

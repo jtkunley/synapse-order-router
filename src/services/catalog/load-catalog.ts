@@ -4,6 +4,10 @@ import type { Catalog } from '../../models/catalog.js';
 import { readRows } from './read-rows.js';
 import { productSchema, supplierSchema } from './schemas.js';
 
+/**
+ * Load `products.csv` and `suppliers.csv` from a directory (BUS_RULE-002…007).
+ * Conflicting or duplicate reference data fails fast at boot (OPEN-007).
+ */
 export async function loadCatalog(directory: string): Promise<Catalog> {
   const [productCsv, supplierCsv] = await Promise.all([
     readFile(join(directory, 'products.csv'), 'utf8'),

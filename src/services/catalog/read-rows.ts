@@ -1,6 +1,7 @@
 import { parse } from 'csv-parse/sync';
 import type { z } from 'zod';
 
+/** Parse a CSV into records and validate each row; normalize known assessment quirks. */
 export function readRows<T>(content: string, filename: string, schema: z.ZodType<T>): T[] {
   const records: unknown = parse(content, {
     bom: true,

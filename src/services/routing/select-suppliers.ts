@@ -3,6 +3,10 @@ import { compareText } from './compare-text.js';
 import { planIds } from './plan-ids.js';
 import { EPSILON, SIMILAR_RATING_DIFFERENCE, type Candidate, type Plan } from './types.js';
 
+/**
+ * Choose a minimum-shipment cover, then apply quality and local preference
+ * (BUS_RULE-016…019, OPEN-002…005). Search is exact within the pruned candidate set.
+ */
 export function selectSuppliers(
   candidates: Candidate[],
   fullMask: bigint,

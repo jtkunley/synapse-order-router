@@ -3,6 +3,10 @@ import type { Order } from '../../models/order.js';
 import { compareText } from './compare-text.js';
 import type { OrderItem } from './types.js';
 
+/**
+ * Resolve catalog categories and combine duplicate product lines (OPEN-006).
+ * Unknown codes and unsafe total quantities become errors (OPEN-007).
+ */
 export function normalizeItems(
   order: Order,
   catalog: Catalog,

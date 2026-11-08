@@ -4,6 +4,10 @@ import { bitCount } from './bit-count.js';
 import { compareText } from './compare-text.js';
 import type { Candidate } from './types.js';
 
+/**
+ * Build the supplier search space for this order (BUS_RULE-011…014, OPEN-001).
+ * Keep the best-rated supplier per identical coverage mask and local/mail mode.
+ */
 export function findEligibleCandidates(
   order: Order,
   catalog: Catalog,

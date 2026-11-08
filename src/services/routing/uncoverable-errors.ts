@@ -1,6 +1,7 @@
 import type { Order } from '../../models/order.js';
 import type { Candidate, OrderItem } from './types.js';
 
+/** If any ordered category has no eligible supplier, the order is infeasible (BUS_RULE-015). */
 export function uncoverableErrors(
   order: Order,
   items: readonly OrderItem[],
