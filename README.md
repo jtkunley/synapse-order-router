@@ -4,7 +4,8 @@ Repository setup for the Synapse Health multi-supplier order routing assessment.
 No application code, API schemas, routing logic, or tests have been added yet.
 
 See [Business Rules](BUSINESS_RULES.md) for the business behavior, required rules,
-and open policy decisions left by the assessment.
+and open policy decisions left by the assessment. Rule→test coverage is in
+[Business Rules Coverage](BUSINESS_RULES_COVERAGE.md).
 
 ## Requirements
 

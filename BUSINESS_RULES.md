@@ -5,7 +5,7 @@ Based on the instructions and sample orders attached to the
 
 Normative requirements use `BUS_RULE-xxx`. Tests that assert a rule cite that id
 in a comment. Policies the assessment leaves open use `OPEN-xxx` and are not
-defaulted here.
+defaulted here. Full rule→test mapping: [`BUSINESS_RULES_COVERAGE.md`](./BUSINESS_RULES_COVERAGE.md).
 
 ## Purpose
 
