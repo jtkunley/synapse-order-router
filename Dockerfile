@@ -1,5 +1,3 @@
-# Prepared for the future src/server.ts application entrypoint.
-# The build becomes runnable after application code is added.
 FROM node:26-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -17,4 +15,5 @@ COPY --from=build /app/dist ./dist
 COPY data ./data
 USER node
 EXPOSE 3000
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/main.js"]
+

@@ -38,14 +38,14 @@ const {
   };
 });
 
-vi.mock('../../src/app.js', () => ({ createApp }));
-vi.mock('../../src/services/catalog.js', () => ({ loadCatalog }));
-vi.mock('../../src/config/env.js', () => ({ getEnv }));
-vi.mock('../../src/runtime/fatal-error.js', () => ({
+vi.mock('../../../src/app.js', () => ({ createApp }));
+vi.mock('../../../src/services/catalog.js', () => ({ loadCatalog }));
+vi.mock('../../../src/config/env.js', () => ({ getEnv }));
+vi.mock('../../../src/runtime/fatal-error.js', () => ({
   enableServerErrorHandling,
   handleFatalError,
 }));
-vi.mock('../../src/runtime/graceful-shutdown.js', () => ({ enableGracefulShutdown }));
+vi.mock('../../../src/runtime/graceful-shutdown.js', () => ({ enableGracefulShutdown }));
 vi.mock('@jtkunley/logger', () => ({
   logger: { init: vi.fn(() => rootLogger) },
 }));
@@ -63,7 +63,7 @@ describe('start', () => {
   });
 
   it('loads config and catalog, listens, and wires runtime handlers', async () => {
-    const { start } = await import('../../src/server.js');
+    const { start } = await import('../../../src/runtime/start.js');
     await start();
 
     expect(getEnv).toHaveBeenCalled();
@@ -79,7 +79,7 @@ describe('start', () => {
     getEnv.mockImplementation(() => {
       throw new Error('bad port');
     });
-    const { start } = await import('../../src/server.js');
+    const { start } = await import('../../../src/runtime/start.js');
     await start();
     expect(handleFatalError).toHaveBeenCalledWith(rootLogger, expect.any(Error));
   });

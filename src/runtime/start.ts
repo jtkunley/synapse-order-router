@@ -1,10 +1,9 @@
-import { pathToFileURL } from 'node:url';
 import { logger } from '@jtkunley/logger';
-import { createApp } from './app.js';
-import { getEnv } from './config/env.js';
-import { enableServerErrorHandling, handleFatalError } from './runtime/fatal-error.js';
-import { enableGracefulShutdown } from './runtime/graceful-shutdown.js';
-import { loadCatalog } from './services/catalog.js';
+import { createApp } from '../app.js';
+import { getEnv } from '../config/env.js';
+import { loadCatalog } from '../services/catalog.js';
+import { enableServerErrorHandling, handleFatalError } from './fatal-error.js';
+import { enableGracefulShutdown } from './graceful-shutdown.js';
 
 const rootLogger = logger.init('synapse-order-router');
 
@@ -21,9 +20,4 @@ export async function start(): Promise<void> {
   } catch (error) {
     await handleFatalError(rootLogger, error);
   }
-}
-
-const entry = process.argv[1];
-if (entry && import.meta.url === pathToFileURL(entry).href) {
-  await start();
 }
