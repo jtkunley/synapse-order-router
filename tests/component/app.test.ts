@@ -13,6 +13,7 @@ describe('createApp', () => {
     }),
   ]);
 
+  // BUS_RULE-021, BUS_RULE-022
   it('disables x-powered-by and serves openapi plus routing', async () => {
     const app = createApp(catalog);
     const openapi = await request(app).get('/openapi.json');
@@ -32,6 +33,7 @@ describe('createApp', () => {
     expect(routed.body.feasible).toBe(true);
   });
 
+  // BUS_RULE-022, BUS_RULE-024
   it('returns HTTP 200 for invalid JSON bodies', async () => {
     const response = await request(createApp(catalog))
       .post('/api/route')

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { orderSchema } from '../../../src/models/order.js';
 
 describe('orderSchema', () => {
+  // BUS_RULE-001, BUS_RULE-008, BUS_RULE-009
   it('accepts a valid order and strips unused sample fields', () => {
     const parsed = orderSchema.parse({
       order_id: ' ORD-1 ',
@@ -20,6 +21,7 @@ describe('orderSchema', () => {
     });
   });
 
+  // BUS_RULE-025, BUS_RULE-026
   it('reports multiple validation errors together', () => {
     const result = orderSchema.safeParse({
       order_id: '',
@@ -36,6 +38,7 @@ describe('orderSchema', () => {
     );
   });
 
+  // BUS_RULE-025
   it('requires at least one line item and a five-digit ZIP', () => {
     expect(
       orderSchema.safeParse({

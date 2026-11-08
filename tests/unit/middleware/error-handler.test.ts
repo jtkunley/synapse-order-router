@@ -13,6 +13,7 @@ function appWithError(error: unknown): express.Express {
 }
 
 describe('handleError', () => {
+  // BUS_RULE-022, BUS_RULE-024
   it('returns HTTP 200 with a body-parser message for invalid JSON types', async () => {
     const error = Object.assign(new Error('bad json'), { type: 'entity.parse.failed' });
     const response = await request(appWithError(error)).get('/boom');
@@ -23,6 +24,7 @@ describe('handleError', () => {
     });
   });
 
+  // BUS_RULE-022, BUS_RULE-024
   it('returns HTTP 200 with an exposed client message', async () => {
     const error = Object.assign(new Error('Nope'), { expose: true });
     const response = await request(appWithError(error)).get('/boom');
@@ -30,6 +32,7 @@ describe('handleError', () => {
     expect(response.body).toEqual({ feasible: false, errors: ['Nope'] });
   });
 
+  // BUS_RULE-022, BUS_RULE-024
   it('logs unexpected errors and returns a generic failure', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const response = await request(appWithError(new Error('secret'))).get('/boom');

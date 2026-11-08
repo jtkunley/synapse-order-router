@@ -3,6 +3,7 @@ import { routeOrder } from '../../../src/services/routing/index.js';
 import { makeCatalog, makeOrder, makeSupplier } from '../../helpers/catalog.js';
 
 describe('routeOrder', () => {
+  // BUS_RULE-010, BUS_RULE-024, OPEN-006, OPEN-007
   it('combines duplicate product lines and returns unknown-product errors', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -62,6 +63,7 @@ describe('routeOrder', () => {
     });
   });
 
+  // BUS_RULE-012, BUS_RULE-013, BUS_RULE-015, OPEN-008
   it('uses only local suppliers when mail_order is false', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -92,6 +94,7 @@ describe('routeOrder', () => {
     });
   });
 
+  // OPEN-001, BUS_RULE-018, OPEN-008
   it('keeps local suppliers eligible when mail_order is true even without mail capability', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -120,6 +123,7 @@ describe('routeOrder', () => {
     expect(routed.routing[0]?.items[0]?.fulfillment_mode).toBe('local');
   });
 
+  // BUS_RULE-016, BUS_RULE-019, OPEN-002
   it('prefers consolidation over a higher total rating with more shipments', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
@@ -156,6 +160,7 @@ describe('routeOrder', () => {
     expect(routed.routing.map((group) => group.supplier_id)).toEqual(['SUP-BOTH']);
   });
 
+  // BUS_RULE-017
   it('prefers higher satisfaction among otherwise equal single-supplier options', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -181,6 +186,7 @@ describe('routeOrder', () => {
     expect(routed.routing[0]?.supplier_id).toBe('SUP-HIGH');
   });
 
+  // BUS_RULE-017, BUS_RULE-018, OPEN-004, OPEN-008
   it('prefers local fulfillment when ratings are similar, otherwise prefers quality', () => {
     const products = { 'WC-1': 'wheelchair' };
     const local = makeSupplier({
@@ -229,6 +235,7 @@ describe('routeOrder', () => {
     expect(preferQuality.routing[0]?.items[0]?.fulfillment_mode).toBe('mail_order');
   });
 
+  // BUS_RULE-011, BUS_RULE-015, BUS_RULE-020, BUS_RULE-027
   it('splits across suppliers when no single supplier covers every category', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
@@ -262,6 +269,7 @@ describe('routeOrder', () => {
     ).toEqual(['OX-1', 'WC-1']);
   });
 
+  // BUS_RULE-008
   it('matches leading-zero customer ZIPs against numeric supplier coverage', () => {
     const catalog = makeCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
@@ -284,6 +292,7 @@ describe('routeOrder', () => {
     expect(routed.routing[0]?.supplier_id).toBe('SUP-BOS');
   });
 
+  // OPEN-003, OPEN-005
   it('treats unrated suppliers as score 0 and breaks equal ties by supplier id', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -309,6 +318,7 @@ describe('routeOrder', () => {
     expect(routed.routing[0]?.supplier_id).toBe('SUP-A');
   });
 
+  // BUS_RULE-016, BUS_RULE-011
   it('improves on a suboptimal greedy cover and ignores irrelevant suppliers', () => {
     const catalog = makeCatalog(
       {
@@ -376,6 +386,7 @@ describe('routeOrder', () => {
     ]);
   });
 
+  // BUS_RULE-011, BUS_RULE-014, BUS_RULE-015, BUS_RULE-024
   it('reports infeasible mail-order failures when no supplier can cover a category', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({

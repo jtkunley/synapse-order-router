@@ -16,6 +16,7 @@ function appWithCatalog(
 }
 
 describe('POST /api/route', () => {
+  // BUS_RULE-001, BUS_RULE-009, BUS_RULE-010, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, OPEN-008
   it('returns HTTP 200 with the success routing shape', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -58,6 +59,7 @@ describe('POST /api/route', () => {
     });
   });
 
+  // BUS_RULE-022, BUS_RULE-024, BUS_RULE-025, BUS_RULE-026
   it('returns HTTP 200 with multiple validation errors for invalid orders', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -79,6 +81,7 @@ describe('POST /api/route', () => {
     expect(response.body.errors.length).toBeGreaterThan(1);
   });
 
+  // BUS_RULE-010, BUS_RULE-012, BUS_RULE-015, BUS_RULE-022, BUS_RULE-024, OPEN-007
   it('returns HTTP 200 when products are unknown or the order is infeasible', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -117,6 +120,7 @@ describe('POST /api/route', () => {
     expect(infeasible.body.errors[0]).toMatch(/mail order disallowed/);
   });
 
+  // BUS_RULE-012, BUS_RULE-015, OPEN-008
   it('uses only ZIP-local suppliers when mail_order is false', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -150,6 +154,7 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].items[0].fulfillment_mode).toBe('local');
   });
 
+  // BUS_RULE-011, BUS_RULE-013, BUS_RULE-014, OPEN-008
   it('allows mail-capable suppliers regardless of ZIP when mail_order is true, but still requires category', async () => {
     const mailWheelchairOnly = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
@@ -189,6 +194,7 @@ describe('POST /api/route', () => {
     expect(wrongCategory.body.errors[0]).toMatch(/No eligible supplier for OX-1/);
   });
 
+  // OPEN-001, BUS_RULE-018, OPEN-008
   it('keeps local non-mail suppliers eligible when mail_order is true', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -221,6 +227,7 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].items[0].fulfillment_mode).toBe('local');
   });
 
+  // BUS_RULE-016, BUS_RULE-019, OPEN-002
   it('prefers consolidation over a higher total rating with more shipments', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
@@ -261,6 +268,7 @@ describe('POST /api/route', () => {
     ).toEqual(['SUP-BOTH']);
   });
 
+  // BUS_RULE-017
   it('prefers higher satisfaction among single-supplier options', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -290,6 +298,7 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].supplier_id).toBe('SUP-HIGH');
   });
 
+  // BUS_RULE-017, BUS_RULE-018, OPEN-004, OPEN-008
   it('prefers local fulfillment when ratings are similar, otherwise quality', async () => {
     const products = { 'WC-1': 'wheelchair' };
     const local = makeSupplier({
@@ -346,6 +355,7 @@ describe('POST /api/route', () => {
     expect(quality.body.routing[0].items[0].fulfillment_mode).toBe('mail_order');
   });
 
+  // BUS_RULE-011, BUS_RULE-020, BUS_RULE-027
   it('splits across suppliers when no single supplier covers every category', async () => {
     const app = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
@@ -387,6 +397,7 @@ describe('POST /api/route', () => {
     expect(quantities).toEqual({ 'WC-1': 1, 'OX-1': 1 });
   });
 
+  // BUS_RULE-008, BUS_RULE-027, OPEN-006
   it('combines duplicate line items and preserves leading-zero ZIPs', async () => {
     const app = appWithCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
@@ -421,6 +432,7 @@ describe('POST /api/route', () => {
     ]);
   });
 
+  // BUS_RULE-002, BUS_RULE-003, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, BUS_RULE-027, OPEN-008
   it('routes the assessment sample orders through the real catalog', async () => {
     const dataDir = join(dirname(fileURLToPath(import.meta.url)), '../../../data');
     const catalog = await loadCatalog(dataDir);
@@ -441,6 +453,8 @@ describe('POST /api/route', () => {
 
       const routedQuantity = new Map<string, number>();
       for (const group of response.body.routing as {
+        supplier_id: string;
+        supplier_name: string;
         items: {
           product_code: string;
           quantity: number;
@@ -448,6 +462,8 @@ describe('POST /api/route', () => {
           fulfillment_mode: string;
         }[];
       }[]) {
+        expect(group.supplier_id).toBeTruthy();
+        expect(group.supplier_name).toBeTruthy();
         expect(group.items.length).toBeGreaterThan(0);
         for (const item of group.items) {
           expect(item.category).toBeTruthy();

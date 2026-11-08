@@ -6,6 +6,7 @@ import { loadCatalog } from '../../../src/services/catalog/index.js';
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
 
 describe('loadCatalog', () => {
+  // BUS_RULE-002, BUS_RULE-003, BUS_RULE-004, BUS_RULE-005, BUS_RULE-006, BUS_RULE-007, BUS_RULE-008
   it('parses ZIP lists, ranges, ratings, and the misspelled supplier_name header', async () => {
     const catalog = await loadCatalog(join(fixtures, 'catalog-basic'));
 
@@ -40,28 +41,33 @@ describe('loadCatalog', () => {
     });
   });
 
+  // OPEN-007
   it('rejects duplicate supplier IDs', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-duplicate-supplier'))).rejects.toThrow(
       /duplicate supplier ID SUP-1/,
     );
   });
 
+  // OPEN-007
   it('rejects conflicting product categories', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-conflict-product'))).rejects.toThrow(
       /conflicting categories for WC-1/,
     );
   });
 
+  // OPEN-007
   it('rejects empty CSV files', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-empty'))).rejects.toThrow(/no data records/);
   });
 
+  // BUS_RULE-004, OPEN-007
   it('rejects inverted ZIP ranges with a record-level error', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-bad-zip'))).rejects.toThrow(
       /Invalid ZIP coverage/,
     );
   });
 
+  // OPEN-007
   it('rejects duplicate column headers', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-duplicate-header'))).rejects.toThrow(
       /duplicate column headers/,

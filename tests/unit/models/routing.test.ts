@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { failureSchema, responseSchema } from '../../../src/models/routing.js';
 
 describe('responseSchema', () => {
+  // BUS_RULE-023
   it('accepts a feasible routing response', () => {
     const parsed = responseSchema.parse({
       feasible: true,
@@ -23,6 +24,7 @@ describe('responseSchema', () => {
     expect(parsed.feasible).toBe(true);
   });
 
+  // BUS_RULE-024
   it('accepts a failure response', () => {
     expect(failureSchema.parse({ feasible: false, errors: ['bad'] })).toEqual({
       feasible: false,
@@ -30,6 +32,7 @@ describe('responseSchema', () => {
     });
   });
 
+  // BUS_RULE-023, BUS_RULE-024
   it('rejects empty routing groups and empty error lists', () => {
     expect(
       responseSchema.safeParse({
