@@ -1,6 +1,5 @@
 import { z } from 'zod';
-
-const quantity = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+import { quantitySchema } from './order.js';
 
 export const failureSchema = z.object({
   feasible: z.literal(false),
@@ -18,7 +17,7 @@ export const successSchema = z.object({
           .array(
             z.object({
               product_code: z.string(),
-              quantity,
+              quantity: quantitySchema,
               category: z.string(),
               fulfillment_mode: z.enum(['local', 'mail_order']),
             }),
