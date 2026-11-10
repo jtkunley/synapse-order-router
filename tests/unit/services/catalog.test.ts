@@ -41,11 +41,16 @@ describe('loadCatalog', () => {
     });
   });
 
-  // OPEN-007
-  it('rejects duplicate supplier IDs', async () => {
-    await expect(loadCatalog(join(fixtures, 'catalog-duplicate-supplier'))).rejects.toThrow(
-      /duplicate supplier ID SUP-1/,
-    );
+  // BUS_RULE-003, OPEN-007
+  it('keeps the first supplier row and warns once per skipped duplicate', async () => {
+    const output = { warn: vi.fn() };
+    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'), output);
+
+    expect(catalog.suppliers).toHaveLength(1);
+    expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', rating: 5 });
+    expect(output.warn.mock.calls).toEqual([
+      ['suppliers.csv: duplicate supplier ID SUP-1 (name Two ignored); using first entry.'],
+    ]);
   });
 
   // BUS_RULE-002, OPEN-007
@@ -63,7 +68,7 @@ describe('loadCatalog', () => {
   });
 
   // OPEN-007
-  it('does not warn when product codes are unique', async () => {
+  it('does not warn when product codes and supplier IDs are unique', async () => {
     const output = { warn: vi.fn() };
     await loadCatalog(join(fixtures, 'catalog-basic'), output);
 
