@@ -97,7 +97,7 @@ the routing decision.
 
 10. **BRX-010 — Order field validity:** The order ID is non-empty, a valid customer ZIP code has exactly five digits, and the mail-order value is Boolean. Each line item has a non-empty product code and a positive integer quantity.
 11. **BRX-011 — Catalog availability:** A missing or malformed catalog prevents routing.
-12. **BRX-012 — Duplicate catalog identifiers:** For repeated product codes or supplier IDs, the first valid record remains authoritative. Each subsequent record with the same identifier is ignored and reported.
+12. **BRX-012 — Duplicate catalog identifiers:** For repeated product codes or supplier IDs, the first valid record remains authoritative. Each subsequent valid record with the same identifier is ignored and reported.
 13. **BRX-013 — Unknown products:** An order containing an unknown product code is infeasible and includes a reason.
 
 ### Fulfillment classification
@@ -105,11 +105,15 @@ the routing decision.
 14. **BRX-014 — Fulfillment modes:** The supported fulfillment modes are `local` and `mail_order`.
 15. **BRX-015 — Dual eligibility:** A supplier eligible both locally and by mail order uses local fulfillment.
 
-### Source-data normalization
+### Input normalization
 
-16. **BRX-016 — Text normalization:** Surrounding whitespace is ignored. Product categories, `no ratings yet`, and `y`/`n` mail-order values are interpreted without regard to letter case.
+16. **BRX-016 — Text normalization:** Surrounding whitespace is ignored in order IDs, customer ZIP codes, product codes, CSV headers, and catalog text values. Product categories, `no ratings yet`, and `y`/`n` mail-order values are interpreted without regard to letter case.
 17. **BRX-017 — Supplier-name header:** The supplied `suplier_name` header represents `supplier_name`.
 18. **BRX-018 — Four-digit service ZIP:** A four-digit service ZIP is interpreted as a ZIP code whose leading zero was lost.
+
+### Quantity integrity
+
+19. **BRX-019 — Exact quantity:** A line-item quantity, including a total formed by combining repeated line items, must be a positive integer that the service can represent exactly.
 
 ## Business boundaries
 
