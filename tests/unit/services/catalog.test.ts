@@ -6,8 +6,8 @@ import { getCatalog, loadCatalog } from '../../../src/services/catalog/index.js'
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
 
 describe('loadCatalog', () => {
-  // BUS_RULE-002, BUS_RULE-003, BUS_RULE-004, BUS_RULE-005, BUS_RULE-006, BUS_RULE-007, BUS_RULE-008
-  it('parses ZIP lists, ranges, ratings, and the misspelled supplier_name header', async () => {
+  // BR-002, BR-003, BR-004, BR-005, BR-006, BR-007, BR-008, BRX-016, BRX-017
+  it('loads products and suppliers, with trimmed headers and the misspelled suplier_name header', async () => {
     await loadCatalog(join(fixtures, 'catalog-basic'));
     const catalog = getCatalog();
 
@@ -42,7 +42,7 @@ describe('loadCatalog', () => {
     });
   });
 
-  // BUS_RULE-003, OPEN-007
+  // BRX-012
   it('keeps the first supplier row when supplier IDs repeat', async () => {
     await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'));
     const catalog = getCatalog();
@@ -51,7 +51,7 @@ describe('loadCatalog', () => {
     expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', satisfactionScore: 5 });
   });
 
-  // BUS_RULE-002, OPEN-007
+  // BRX-012
   it('keeps the first product row when product codes repeat', async () => {
     await loadCatalog(join(fixtures, 'catalog-duplicate-product'));
     const catalog = getCatalog();
@@ -60,20 +60,20 @@ describe('loadCatalog', () => {
     expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });
   });
 
-  // OPEN-007
-  it('rejects empty CSV files', async () => {
+  // BRX-011
+  it('rejects an empty CSV file as a malformed catalog', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-empty'))).rejects.toThrow(/no data records/);
   });
 
-  // BUS_RULE-004, OPEN-007
-  it('rejects inverted ZIP ranges with a record-level error', async () => {
+  // BR-004, BRX-011
+  it('rejects a malformed record, such as a reversed ZIP range', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-bad-zip'))).rejects.toThrow(
       /Invalid ZIP coverage/,
     );
   });
 
-  // OPEN-007
-  it('rejects duplicate column headers', async () => {
+  // BRX-011
+  it('rejects duplicate column headers as a malformed catalog', async () => {
     await expect(loadCatalog(join(fixtures, 'catalog-duplicate-header'))).rejects.toThrow(
       /duplicate column headers/,
     );
