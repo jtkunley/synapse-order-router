@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { formatIssues } from '../models/format-issues.js';
 import { orderSchema } from '../models/order.js';
 import { getFailureResponse, responseSchema } from '../models/routing.js';
 import { routeOrder } from '../services/routing/index.js';
@@ -13,10 +14,7 @@ export function handleOrderRouting(request: Request, response: Response): void {
 
   // validation failed, return a failure response
   if (!order.success) {
-    const errors = order.error.issues.map(
-      (issue) => `${issue.path.join('.') || 'order'}: ${issue.message}`,
-    );
-    response.status(200).json(getFailureResponse(errors));
+    response.status(200).json(getFailureResponse(formatIssues(order.error, 'order')));
     return;
   }
 
