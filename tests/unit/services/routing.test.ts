@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
 import { routeOrder } from '../../../src/services/routing/index.js';
 import { makeCatalog, makeOrder, makeSupplier } from '../../helpers/catalog.js';
 
@@ -13,6 +14,7 @@ describe('routeOrder', () => {
         rating: 8,
       }),
     ]);
+    setCatalog(catalog);
 
     const unknown = routeOrder(
       makeOrder({
@@ -21,7 +23,6 @@ describe('routeOrder', () => {
           { product_code: 'NOPE', quantity: 1 },
         ],
       }),
-      catalog,
     );
     expect(unknown).toEqual({
       feasible: false,
@@ -35,7 +36,6 @@ describe('routeOrder', () => {
           { product_code: 'WC-1', quantity: 2 },
         ],
       }),
-      catalog,
     );
     expect(combined.feasible).toBe(true);
     if (!combined.feasible) return;
@@ -55,7 +55,6 @@ describe('routeOrder', () => {
           { product_code: 'WC-1', quantity: 1 },
         ],
       }),
-      catalog,
     );
     expect(tooLarge).toEqual({
       feasible: false,
@@ -74,17 +73,14 @@ describe('routeOrder', () => {
         rating: 10,
       }),
     ]);
+    setCatalog(catalog);
 
     expect(
-      routeOrder(
-        makeOrder({ mail_order: false, items: [{ product_code: 'WC-1', quantity: 1 }] }),
-        catalog,
-      ),
+      routeOrder(makeOrder({ mail_order: false, items: [{ product_code: 'WC-1', quantity: 1 }] })),
     ).toMatchObject({ feasible: false });
 
     const routed = routeOrder(
       makeOrder({ mail_order: true, items: [{ product_code: 'WC-1', quantity: 1 }] }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -112,10 +108,10 @@ describe('routeOrder', () => {
         rating: 6,
       }),
     ]);
+    setCatalog(catalog);
 
     const routed = routeOrder(
       makeOrder({ mail_order: true, items: [{ product_code: 'WC-1', quantity: 1 }] }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -145,6 +141,7 @@ describe('routeOrder', () => {
         rating: 10,
       }),
     ]);
+    setCatalog(catalog);
 
     const routed = routeOrder(
       makeOrder({
@@ -153,7 +150,6 @@ describe('routeOrder', () => {
           { product_code: 'OX-1', quantity: 1 },
         ],
       }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -176,11 +172,9 @@ describe('routeOrder', () => {
         rating: 9,
       }),
     ]);
+    setCatalog(catalog);
 
-    const routed = routeOrder(
-      makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }),
-      catalog,
-    );
+    const routed = routeOrder(makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }));
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
     expect(routed.routing[0]?.supplier_id).toBe('SUP-HIGH');
@@ -211,23 +205,23 @@ describe('routeOrder', () => {
       rating: 9.5,
     });
 
+    setCatalog(makeCatalog(products, [local, similarMail]));
     const preferLocal = routeOrder(
       makeOrder({
         mail_order: true,
         items: [{ product_code: 'WC-1', quantity: 1 }],
       }),
-      makeCatalog(products, [local, similarMail]),
     );
     expect(preferLocal.feasible).toBe(true);
     if (!preferLocal.feasible) return;
     expect(preferLocal.routing[0]?.supplier_id).toBe('SUP-LOCAL');
 
+    setCatalog(makeCatalog(products, [local, betterMail]));
     const preferQuality = routeOrder(
       makeOrder({
         mail_order: true,
         items: [{ product_code: 'WC-1', quantity: 1 }],
       }),
-      makeCatalog(products, [local, betterMail]),
     );
     expect(preferQuality.feasible).toBe(true);
     if (!preferQuality.feasible) return;
@@ -251,6 +245,7 @@ describe('routeOrder', () => {
         rating: 7,
       }),
     ]);
+    setCatalog(catalog);
 
     const routed = routeOrder(
       makeOrder({
@@ -259,7 +254,6 @@ describe('routeOrder', () => {
           { product_code: 'OX-1', quantity: 1 },
         ],
       }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -279,13 +273,13 @@ describe('routeOrder', () => {
         rating: 8,
       }),
     ]);
+    setCatalog(catalog);
 
     const routed = routeOrder(
       makeOrder({
         customer_zip: '02130',
         items: [{ product_code: 'CP-1', quantity: 1 }],
       }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -308,11 +302,9 @@ describe('routeOrder', () => {
         rating: null,
       }),
     ]);
+    setCatalog(catalog);
 
-    const routed = routeOrder(
-      makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }),
-      catalog,
-    );
+    const routed = routeOrder(makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }));
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
     expect(routed.routing[0]?.supplier_id).toBe('SUP-A');
@@ -368,6 +360,7 @@ describe('routeOrder', () => {
         }),
       ],
     );
+    setCatalog(catalog);
 
     const routed = routeOrder(
       makeOrder({
@@ -376,7 +369,6 @@ describe('routeOrder', () => {
           quantity: 1,
         })),
       }),
-      catalog,
     );
     expect(routed.feasible).toBe(true);
     if (!routed.feasible) return;
@@ -397,6 +389,7 @@ describe('routeOrder', () => {
         rating: 9,
       }),
     ]);
+    setCatalog(catalog);
 
     expect(
       routeOrder(
@@ -404,7 +397,6 @@ describe('routeOrder', () => {
           mail_order: true,
           items: [{ product_code: 'WC-1', quantity: 1 }],
         }),
-        catalog,
       ),
     ).toEqual({
       feasible: false,

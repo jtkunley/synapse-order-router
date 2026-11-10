@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import { orderSchema } from '../models/order.js';
 import { responseSchema } from '../models/routing.js';
 import type { RoutingFailure } from '../models/routing.js';
-import { getCatalog } from '../services/catalog/index.js';
 import { routeOrder } from '../services/routing/index.js';
 
 /** Order-routing endpoint (BUS_RULE-021…027). Always HTTP 200; outcome is `feasible`. */
@@ -26,5 +25,5 @@ export function handleOrderRouting(request: Request, response: Response): void {
   }
 
   // validation successful, route the order and return the response
-  response.status(200).json(responseSchema.parse(routeOrder(order.data, getCatalog())));
+  response.status(200).json(responseSchema.parse(routeOrder(order.data)));
 }

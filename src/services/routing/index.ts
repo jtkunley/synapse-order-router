@@ -1,4 +1,3 @@
-import type { Catalog } from '../../models/catalog.js';
 import type { Order } from '../../models/order.js';
 import type { RoutingResponse } from '../../models/routing.js';
 import { buildCategoryBits } from './build-category-bits.js';
@@ -15,12 +14,12 @@ import { uncoverableErrors } from './uncoverable-errors.js';
  * select (BUS_RULE-015…020) → response shape. Failures always use `feasible: false`
  * with errors; successes assign every requested quantity (BUS_RULE-027).
  */
-export function routeOrder(order: Order, catalog: Catalog): RoutingResponse {
-  const { items, errors } = normalizeItems(order, catalog);
+export function routeOrder(order: Order): RoutingResponse {
+  const { items, errors } = normalizeItems(order);
   if (errors.length) return { feasible: false, errors };
 
   const { categoryBits, fullMask } = buildCategoryBits(items);
-  const candidates = findEligibleCandidates(order, catalog, categoryBits);
+  const candidates = findEligibleCandidates(order, categoryBits);
   const uncovered = uncoverableErrors(order, items, candidates, categoryBits, fullMask);
   if (uncovered) return { feasible: false, errors: uncovered };
 
