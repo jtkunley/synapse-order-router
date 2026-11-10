@@ -28,7 +28,8 @@ implementation and acceptance testing.
 | Product category       | A supplier capability used to determine whether a supplier can fulfill a line item.                                          |
 | Supplier               | A business with defined product capabilities, geographic service coverage, customer satisfaction, and mail-order capability. |
 | Eligible supplier      | A supplier that supports the required product category and satisfies the applicable geographic or mail-order condition.      |
-| Routing decision       | A feasible assignment of the complete order to suppliers, or an infeasible outcome with reasons.                             |
+| Routing plan           | A proposed set of eligible suppliers capable of fulfilling the complete order.                                               |
+| Routing decision       | The final routing produced from the selected routing plan, or an infeasible outcome with reasons.                            |
 | Local fulfillment      | Fulfillment by a supplier that serves the customer's ZIP code.                                                               |
 | Mail-order fulfillment | Fulfillment by a mail-order-capable supplier without requiring local ZIP coverage.                                           |
 | Shipment               | The portion of an order assigned to one supplier.                                                                            |
@@ -55,7 +56,8 @@ implementation and acceptance testing.
 
 ## Routing priorities
 
-The routing decision applies these priorities in order:
+Routing plans are evaluated using these priorities in order. The selected plan produces
+the routing decision.
 
 15. **BR-015** — **Feasibility:** assign line items only to eligible suppliers.
 16. **BR-016** — **Customer experience:** prefer fewer shipments and consolidate the order with one supplier when possible.
@@ -80,9 +82,9 @@ The routing decision applies these priorities in order:
 
 1. **BRX-001 — Mail-order eligibility:** When `mail_order` is true, a ZIP-local supplier remains eligible without mail-order capability.
 2. **BRX-002 — Shipment counting:** Each supplier assigned at least one line item represents one shipment.
-3. **BRX-003 — Satisfaction calculation:** An unrated supplier has a comparison score of zero. A multi-supplier decision uses the sum of its selected suppliers' customer satisfaction scores.
-4. **BRX-004 — Similar satisfaction:** A minimum-shipment decision has similar customer satisfaction to the best minimum-shipment decision when its average selected-supplier score is no more than 0.5 points lower.
-5. **BRX-005 — Decision tie-break:** Among minimum-shipment decisions with similar customer satisfaction, prefer fewer mail-order shipments, then higher total customer satisfaction, then the lexicographically smaller ordered set of supplier IDs.
+3. **BRX-003 — Satisfaction calculation:** An unrated supplier has a comparison score of zero. A multi-supplier routing plan uses the sum of its selected suppliers' customer satisfaction scores.
+4. **BRX-004 — Similar satisfaction:** A minimum-shipment routing plan has similar customer satisfaction to the best minimum-shipment plan when its average selected-supplier score is no more than 0.5 points lower.
+5. **BRX-005 — Routing-plan tie-break:** Among minimum-shipment routing plans with similar customer satisfaction, prefer fewer mail-order shipments, then higher total customer satisfaction, then the lexicographically smaller ordered set of supplier IDs.
 
 ### Line-item handling
 
