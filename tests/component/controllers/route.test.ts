@@ -435,7 +435,7 @@ describe('POST /api/route', () => {
   // BUS_RULE-002, BUS_RULE-003, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, BUS_RULE-027, OPEN-008
   it('routes the assessment sample orders through the real catalog', async () => {
     const dataDir = join(dirname(fileURLToPath(import.meta.url)), '../../../data');
-    const catalog = await loadCatalog(dataDir, { warn: () => {} });
+    const catalog = await loadCatalog(dataDir);
     const samples = JSON.parse(await readFile(join(dataDir, 'sample_orders.json'), 'utf8')) as {
       order_id: string;
       customer_zip: string;

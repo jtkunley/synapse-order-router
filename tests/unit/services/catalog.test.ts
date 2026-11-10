@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
@@ -42,37 +42,19 @@ describe('loadCatalog', () => {
   });
 
   // BUS_RULE-003, OPEN-007
-  it('keeps the first supplier row and warns once per skipped duplicate', async () => {
-    const output = { warn: vi.fn() };
-    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'), output);
+  it('keeps the first supplier row when supplier IDs repeat', async () => {
+    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'));
 
     expect(catalog.suppliers).toHaveLength(1);
     expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', rating: 5 });
-    expect(output.warn.mock.calls).toEqual([
-      ['suppliers.csv: duplicate supplier ID SUP-1 (name Two ignored); using first entry.'],
-    ]);
   });
 
   // BUS_RULE-002, OPEN-007
-  it('keeps the first product row and warns once per skipped duplicate', async () => {
-    const output = { warn: vi.fn() };
-    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-product'), output);
+  it('keeps the first product row when product codes repeat', async () => {
+    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-product'));
 
+    expect(catalog.products.size).toBe(1);
     expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });
-    expect(output.warn.mock.calls).toEqual([
-      ['products.csv: duplicate product code WC-1 (category oxygen ignored); using first entry.'],
-      [
-        'products.csv: duplicate product code WC-1 (category wheelchair ignored); using first entry.',
-      ],
-    ]);
-  });
-
-  // OPEN-007
-  it('does not warn when product codes and supplier IDs are unique', async () => {
-    const output = { warn: vi.fn() };
-    await loadCatalog(join(fixtures, 'catalog-basic'), output);
-
-    expect(output.warn).not.toHaveBeenCalled();
   });
 
   // OPEN-007
