@@ -52,7 +52,7 @@ describe('main', () => {
     await import('../../src/main.js');
 
     expect(getEnv).toHaveBeenCalled();
-    expect(createApp).toHaveBeenCalledWith('/tmp/data');
+    expect(createApp).toHaveBeenCalledOnce();
     expect(listen).toHaveBeenCalledWith(3000, '0.0.0.0', expect.any(Function));
     expect(enableServerErrorHandling).toHaveBeenCalled();
     expect(enableGracefulShutdown).toHaveBeenCalled();

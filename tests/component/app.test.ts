@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { loadCatalog } from '../../src/services/catalog/index.js';
 import { makeCatalog, makeSupplier } from '../helpers/catalog.js';
@@ -14,6 +14,10 @@ const order = {
 };
 
 describe('createApp', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
     makeSupplier({
       id: 'SUP-1',
@@ -25,8 +29,9 @@ describe('createApp', () => {
 
   // BUS_RULE-021, BUS_RULE-022
   it('disables x-powered-by and serves openapi, docs, and routing', async () => {
+    vi.stubEnv('DATA_DIR', '/data');
     vi.mocked(loadCatalog).mockResolvedValueOnce(catalog);
-    const app = await createApp('/data');
+    const app = await createApp();
     expect(loadCatalog).toHaveBeenCalledWith('/data');
 
     const openapi = await request(app).get('/openapi.json');
@@ -47,7 +52,7 @@ describe('createApp', () => {
   // BUS_RULE-022, BUS_RULE-024
   it('returns HTTP 200 for invalid JSON bodies', async () => {
     vi.mocked(loadCatalog).mockResolvedValueOnce(catalog);
-    const response = await request(await createApp('/data'))
+    const response = await request(await createApp())
       .post('/api/route')
       .set('Content-Type', 'application/json')
       .send('{');
@@ -64,7 +69,7 @@ describe('createApp', () => {
     vi.mocked(loadCatalog).mockRejectedValueOnce(failure);
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const app = await createApp('/data');
+    const app = await createApp();
     expect(error).toHaveBeenCalledWith('Catalog unavailable', failure);
     error.mockRestore();
 

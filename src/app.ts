@@ -1,4 +1,5 @@
 import express from 'express';
+import { getEnv } from './config/env.js';
 import { addDocs } from './controllers/docs.js';
 import { addOpenApi } from './controllers/openapi.js';
 import { addRoute } from './controllers/route.js';
@@ -6,7 +7,8 @@ import { handleError } from './middleware/error-handler.js';
 import type { Catalog } from './models/catalog.js';
 import { loadCatalog } from './services/catalog/index.js';
 
-export async function createApp(dataDir: string): Promise<express.Express> {
+export async function createApp(): Promise<express.Express> {
+  const { dataDir } = getEnv();
   let catalog: Catalog | undefined;
   try {
     catalog = await loadCatalog(dataDir);

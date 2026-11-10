@@ -2,7 +2,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import request from 'supertest';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../../src/app.js';
 import { routePath } from '../../../src/controllers/route.js';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
@@ -18,10 +18,14 @@ function appWithCatalog(
   suppliers: Parameters<typeof makeCatalog>[1],
 ) {
   vi.mocked(loadCatalog).mockResolvedValueOnce(makeCatalog(products, suppliers));
-  return createApp('unused');
+  return createApp();
 }
 
 describe('POST /api/route', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   // BUS_RULE-001, BUS_RULE-009, BUS_RULE-010, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, OPEN-008
   it('returns HTTP 200 with the success routing shape', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
@@ -449,7 +453,8 @@ describe('POST /api/route', () => {
       priority?: string;
       notes?: string;
     }[];
-    const app = await createApp(dataDir);
+    vi.stubEnv('DATA_DIR', dataDir);
+    const app = await createApp();
 
     for (const sample of samples) {
       const response = await request(app).post(routePath).send(sample);
