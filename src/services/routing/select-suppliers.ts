@@ -3,6 +3,8 @@ import { compareText } from './compare-text.js';
 import { planIds } from './plan-ids.js';
 import { EPSILON, SIMILAR_RATING_DIFFERENCE, type Candidate, type Plan } from './types.js';
 
+type Ranked = Pick<Plan, 'score' | 'ids'>;
+
 /**
  * Choose a minimum-shipment cover, then apply quality and local preference
  * (BUS_RULE-016…019, OPEN-002…005). Search is exact within the pruned candidate set.
@@ -12,68 +14,101 @@ export function selectSuppliers(
   categoryBits: ReadonlyMap<string, bigint>,
   fullMask: bigint,
 ): Candidate[] {
+  // 1. A quick greedy cover gives an upper bound on how many suppliers are needed.
+  const greedyCount = countGreedyCover(candidates, fullMask);
+
+  // 2. Exact search: the best plan per mail-shipment count among the smallest covers.
+  const { plans, supplierCount } = findMinimumPlans(
+    candidates,
+    categoryBits,
+    fullMask,
+    greedyCount,
+  );
+
+  // 3. Among plans of similar quality, prefer fewer mail shipments.
+  const plan = choosePlan(plans, supplierCount);
+
+  return [...plan.candidates].sort((left, right) =>
+    compareText(left.supplier.id, right.supplier.id),
+  );
+}
+
+/** Number of suppliers a greedy cover uses; every category is known to be coverable. */
+function countGreedyCover(candidates: readonly Candidate[], fullMask: bigint): number {
+  const newCoverage = (candidate: Candidate, covered: bigint) =>
+    bitCount(candidate.mask & ~covered);
+
+  let covered = 0n;
+  let count = 0;
+  while (covered !== fullMask) {
+    // Take the supplier that adds the most still-uncovered categories.
+    let best = candidates[0]!;
+    for (const candidate of candidates) {
+      if (newCoverage(candidate, covered) > newCoverage(best, covered)) best = candidate;
+    }
+    covered |= best.mask;
+    count++;
+  }
+  return count;
+}
+
+/** Depth-first search for every smallest cover, keeping the best plan per mail-shipment count. */
+function findMinimumPlans(
+  candidates: readonly Candidate[],
+  categoryBits: ReadonlyMap<string, bigint>,
+  fullMask: bigint,
+  upperBound: number,
+): { plans: Plan[]; supplierCount: number } {
+  // Branch on categories with the fewest options first; it keeps the search tree narrow.
   const byCategory = [...categoryBits.values()]
     .map((bit) => ({
       bit,
       options: candidates.filter((candidate) => (candidate.mask & bit) !== 0n),
     }))
     .sort((left, right) => left.options.length - right.options.length);
-
-  // A greedy cover supplies an upper bound only; the search below is exact.
-  let greedyMask = 0n;
-  let minimumCount = 0;
-  while (greedyMask !== fullMask) {
-    let best = candidates[0]!;
-    for (const candidate of candidates) {
-      if (bitCount(candidate.mask & ~greedyMask) > bitCount(best.mask & ~greedyMask)) {
-        best = candidate;
-      }
-    }
-    greedyMask |= best.mask;
-    minimumCount++;
-  }
-
   const maximumCoverage = Math.max(...candidates.map((candidate) => candidate.coverageCount));
+
+  let supplierCount = upperBound;
   const bestByMailCount = new Map<number, Plan>();
-  const visited = new Map<string, { score: number; ids: string }>();
+  const visited = new Map<string, Ranked>();
+
+  function recordPlan(chosen: Candidate[], score: number, mailCount: number): void {
+    // A smaller cover makes every larger plan found so far irrelevant.
+    if (chosen.length < supplierCount) {
+      supplierCount = chosen.length;
+      bestByMailCount.clear();
+    }
+    if (chosen.length !== supplierCount) return;
+
+    const ids = planIds(chosen);
+    const previous = bestByMailCount.get(mailCount);
+    if (!previous || isBetter({ score, ids }, previous)) {
+      bestByMailCount.set(mailCount, { candidates: [...chosen], score, mailCount, ids });
+    }
+  }
 
   function search(mask: bigint, chosen: Candidate[], score: number, mailCount: number): void {
     if (mask === fullMask) {
-      if (chosen.length < minimumCount) {
-        minimumCount = chosen.length;
-        bestByMailCount.clear();
-      }
-      if (chosen.length !== minimumCount) return;
-      const ids = planIds(chosen);
-      const previous = bestByMailCount.get(mailCount);
-      if (
-        !previous ||
-        score > previous.score + EPSILON ||
-        (Math.abs(score - previous.score) <= EPSILON && compareText(ids, previous.ids) < 0)
-      ) {
-        bestByMailCount.set(mailCount, { candidates: [...chosen], score, mailCount, ids });
-      }
+      recordPlan(chosen, score, mailCount);
       return;
     }
+
+    // Prune: even the widest suppliers could not finish within the current smallest size.
     const remaining = fullMask & ~mask;
-    if (chosen.length + Math.ceil(bitCount(remaining) / maximumCoverage) > minimumCount) return;
+    const fewestStillNeeded = Math.ceil(bitCount(remaining) / maximumCoverage);
+    if (chosen.length + fewestStillNeeded > supplierCount) return;
 
-    // With identical coverage/count/mode, future options are identical: a chosen
-    // supplier cannot cover an uncovered category. Retain the best quality prefix.
+    // Prune: the same coverage, size, and mail count was already reached with equal or
+    // better quality. The remaining choices are identical, so this branch cannot win.
     const key = `${mask}:${chosen.length}:${mailCount}`;
-    const ids = planIds(chosen);
+    const current = { score, ids: planIds(chosen) };
     const previous = visited.get(key);
-    if (
-      previous &&
-      (previous.score > score + EPSILON ||
-        (Math.abs(previous.score - score) <= EPSILON && compareText(previous.ids, ids) <= 0))
-    ) {
-      return;
-    }
-    visited.set(key, { score, ids });
+    if (previous && !isBetter(current, previous)) return;
+    visited.set(key, current);
 
-    const category = byCategory.find(({ bit }) => (remaining & bit) !== 0n)!;
-    for (const candidate of category.options) {
+    // Branch on the first uncovered category: every cover includes one of its options.
+    const next = byCategory.find(({ bit }) => (remaining & bit) !== 0n)!;
+    for (const candidate of next.options) {
       chosen.push(candidate);
       search(
         mask | candidate.mask,
@@ -86,18 +121,29 @@ export function selectSuppliers(
   }
 
   search(0n, [], 0, 0);
-  const plans = [...bestByMailCount.values()];
+  return { plans: [...bestByMailCount.values()], supplierCount };
+}
+
+/** Similar-quality plans compete on fewer mail shipments (OPEN-004, OPEN-005). */
+function choosePlan(plans: Plan[], supplierCount: number): Plan {
+  // Plans within the allowance of the best total score count as similar.
   const highestScore = Math.max(...plans.map((plan) => plan.score));
-  const similarPlans = plans.filter(
-    (plan) => highestScore - plan.score <= SIMILAR_RATING_DIFFERENCE * minimumCount + EPSILON,
-  );
-  similarPlans.sort(
+  const allowance = SIMILAR_RATING_DIFFERENCE * supplierCount + EPSILON;
+  const similar = plans.filter((plan) => highestScore - plan.score <= allowance);
+
+  // Fewer mail shipments, then higher score, then smaller supplier ids.
+  similar.sort(
     (left, right) =>
       left.mailCount - right.mailCount ||
       right.score - left.score ||
       compareText(left.ids, right.ids),
   );
-  return similarPlans[0]!.candidates.sort((left, right) =>
-    compareText(left.supplier.id, right.supplier.id),
-  );
+  return similar[0]!;
+}
+
+/** Higher score wins; equal scores (within EPSILON) fall back to smaller supplier ids. */
+function isBetter(current: Ranked, previous: Ranked): boolean {
+  const difference = current.score - previous.score;
+  if (Math.abs(difference) <= EPSILON) return compareText(current.ids, previous.ids) < 0;
+  return difference > 0;
 }
