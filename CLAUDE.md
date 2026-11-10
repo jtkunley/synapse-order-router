@@ -6,14 +6,14 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 
 | Path               | Responsibility                                                              |
 | ------------------ | --------------------------------------------------------------------------- |
-| `src/main.ts`      | Process entrypoint; calls `start()` only                                    |
+| `src/main.ts`      | Process entrypoint; loads config and catalog, listens, wires runtime        |
 | `src/app.ts`       | Express app wiring (middleware order, controllers)                          |
 | `src/config/`      | `getEnv()` — sole reader of `process.env`                                   |
 | `src/controllers/` | One file per HTTP endpoint (`/api/route`, `/openapi.json`, `/docs`)         |
 | `src/middleware/`  | Express request/response middleware                                         |
 | `src/models/`      | Domain schemas/types (Zod + inferred types)                                 |
 | `src/services/`    | Business logic (`catalog/`, `routing/`; each folder exports via `index.ts`) |
-| `src/runtime/`     | Process boot/shutdown (`start`, fatal, signals)                             |
+| `src/runtime/`     | Process fatal-error and shutdown handling (fatal, signals)                  |
 | `data/`            | Assessment CSV/JSON inputs                                                  |
 
 ## Conventions

@@ -63,7 +63,7 @@ Assessment catalog inputs live in `data/` (`products.csv`, `suppliers.csv`,
 ## Layout
 
 ```text
-src/main.ts            Process entry; calls runtime start()
+src/main.ts            Process entry; loads config/catalog and starts the server
 src/app.ts             Express wiring (mount controllers, error handler)
 src/config/            getEnv() — sole process.env reader
 src/controllers/       One file per HTTP endpoint
@@ -71,7 +71,7 @@ src/middleware/        Request/response middleware
 src/models/            Zod schemas and inferred types
 src/services/catalog/  CSV catalog load (index exports loadCatalog)
 src/services/routing/  Order routing (index exports routeOrder)
-src/runtime/           Boot, fatal errors, graceful shutdown
+src/runtime/           Fatal errors, graceful shutdown
 data/                  Assessment CSV/JSON inputs
 tests/unit|component/  Mirrored *.test.ts layout
 ```

@@ -15,9 +15,9 @@ Chronological high-signal prompts for an external reviewer. This is a concise de
 - Controllers: one file per HTTP endpoint. Models hold business schemas/types. Express middleware lives in `middleware/`; registration order is owned by `app.ts`.
 - Outcomes stay HTTP 200 with `feasible` (aligned to `BUSINESS_RULES.md`, not status-code mapping).
 - Keep process logging lightweight and use dedicated graceful-shutdown / fatal-error handling under `runtime/` (not nested with middleware).
-- `start()` owns boot errors; all `process.env` access goes through `getEnv()`.
+- All `process.env` access goes through `getEnv()`.
 - Domain order-routing belongs in `services/`, separate from Express wiring.
-- Thin `main.ts` only calls `start()` in `runtime/`; keep `app.ts` at `src/` root.
+- `main.ts` boots the process directly and owns boot errors (no separate `start()` wrapper); keep `app.ts` at `src/` root.
 
 ## Rules and conventions
 
