@@ -30,13 +30,13 @@ const numericScore = z
   .pipe(z.number().min(1).max(10));
 const satisfactionScore = text.toLowerCase().pipe(z.union([unrated, numericScore]));
 
-/** "Wheelchair, Walker" → Set { "wheelchair", "walker" }; at least one category. */
+/** "Wheelchair, Walker" → Set { "wheelchair", "walker" }; at least one category (BR-005). */
 const supportedCategories = text
   .transform((value) => value.split(','))
   .pipe(z.array(category).min(1))
   .transform((categories) => new Set(categories));
 
-/** "Y" / "N" → true / false. */
+/** "Y" / "N" → true / false (BR-007). */
 const yesNo = text
   .toLowerCase()
   .pipe(z.enum(['y', 'n']))
@@ -65,8 +65,8 @@ export const supplierSchema: z.ZodType<Supplier> = z
   }));
 
 /**
- * "10001-10099" or a single "10001"; undefined when malformed or reversed.
- * Four-digit ZIPs in the supplied CSV have lost a leading zero.
+ * "10001-10099" or a single "10001"; undefined when malformed or reversed (BR-004).
+ * Four-digit ZIPs in the supplied CSV have lost a leading zero (BRX-018).
  */
 function parseZipRange(entry: string): { start: number; end: number } | undefined {
   const match = /^(?<start>\d{4,5})(?:\s*-\s*(?<end>\d{4,5}))?$/.exec(entry);

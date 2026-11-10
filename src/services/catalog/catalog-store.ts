@@ -35,7 +35,7 @@ export async function loadCatalog(directory: string): Promise<void> {
   });
 }
 
-/** Keyed by code: routing resolves each order line's category with a direct lookup. */
+/** Keyed by code: routing looks up each line item's product category directly. */
 function loadProducts(csv: string): Map<string, Product> {
   const products = new Map<string, Product>();
   for (const product of readRows(csv, 'products.csv', productSchema)) {
