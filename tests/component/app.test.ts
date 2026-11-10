@@ -63,19 +63,11 @@ describe('createApp', () => {
     });
   });
 
-  // BUS_RULE-022, OPEN-007
-  it('still serves docs and reports catalog unavailable when the catalog fails to load', async () => {
+  // OPEN-007
+  it('rejects when the catalog fails to load', async () => {
     const failure = new Error('products.csv: no data records.');
     vi.mocked(loadCatalog).mockRejectedValueOnce(failure);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const app = await createApp();
-    expect(error).toHaveBeenCalledWith('Catalog unavailable', failure);
-    error.mockRestore();
-
-    expect((await request(app).get('/openapi.json')).status).toBe(200);
-    const routed = await request(app).post('/api/route').send(order);
-    expect(routed.status).toBe(200);
-    expect(routed.body).toEqual({ feasible: false, errors: ['Catalog unavailable.'] });
+    await expect(createApp()).rejects.toBe(failure);
   });
 });
