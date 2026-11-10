@@ -1,7 +1,7 @@
 import type { Order } from '../../models/order.js';
 import type { EligibleSupplier, OrderItem } from './types.js';
 
-/** One error per item whose category no eligible supplier covers (BUS_RULE-015). */
+/** One error per item whose category no eligible supplier covers (BR-015, BRX-009). */
 export function findUncoverableErrors(
   order: Order,
   items: readonly OrderItem[],

@@ -5,7 +5,7 @@ import { addRoutes } from './routes.js';
 import { loadCatalog } from './services/catalog/index.js';
 
 export async function createApp(): Promise<express.Express> {
-  // Throws on a missing or malformed catalog so the server never starts without data (OPEN-007).
+  // Throws on a missing or malformed catalog so the server never starts without data (BRX-011).
   await loadCatalog(getEnv().dataDir);
 
   const app = express();

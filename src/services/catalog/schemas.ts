@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Product } from '../../models/product.js';
 import type { Supplier } from '../../models/supplier.js';
 
-/** Zod parsers for the assessment CSV column shapes (BUS_RULE-004…007, BUS_RULE-008). */
+/** Zod parsers for the assessment CSV column shapes (BR-004…008, BRX-016…018). */
 
 const text = z.string().trim().min(1);
 const category = text.toLowerCase();
@@ -21,7 +21,7 @@ const zipRanges = text.transform((value, context) => {
   return ranges;
 });
 
-/** "No ratings yet" → null (OPEN-003); otherwise a number from 1 to 10. */
+/** "No ratings yet" → null (BR-006); otherwise a number from 1 to 10. */
 const unrated = z.literal('no ratings yet').transform(() => null);
 const numericRating = z
   .string()

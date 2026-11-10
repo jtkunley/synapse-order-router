@@ -2,7 +2,7 @@ import type { EligibleSupplier, OrderItem, Routing } from './types.js';
 
 /**
  * Assign each normalized item to one selected supplier and set fulfillment_mode
- * (BUS_RULE-023, OPEN-006, OPEN-008). Local ZIP coverage wins over mail labeling.
+ * (BR-023, BRX-007, BRX-008, BRX-015). Local ZIP coverage wins over mail labeling.
  */
 export function buildRouting(
   items: readonly OrderItem[],

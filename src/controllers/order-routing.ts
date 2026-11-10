@@ -4,12 +4,12 @@ import { orderSchema } from '../models/order.js';
 import { getFailureResponse, responseSchema } from '../models/routing.js';
 import { routeOrder } from '../services/routing/index.js';
 
-/** Order-routing endpoint (BUS_RULE-021…027). Always HTTP 200; outcome is `feasible`. */
+/** Order-routing endpoint (BR-021…027). Always HTTP 200; outcome is `feasible`. */
 export const orderRoutingPath = '/api/route';
 
 export function handleOrderRouting(request: Request, response: Response): void {
   // Validate the request body. safeParse returns every issue instead of throwing, so all
-  // validation errors are reported together as a feasible: false response (BUS_RULE-024…026).
+  // validation errors are reported together as a feasible: false response (BR-024…026, BRX-010).
   const order = orderSchema.safeParse(request.body);
 
   // validation failed, return a failure response

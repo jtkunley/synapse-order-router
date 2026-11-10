@@ -4,8 +4,8 @@ import { compareText } from './compare-text.js';
 import type { OrderItem } from './types.js';
 
 /**
- * Resolve catalog categories and combine duplicate product lines (OPEN-006).
- * Unknown codes and unsafe total quantities become errors (OPEN-007).
+ * Resolve catalog categories and combine duplicate product lines (BRX-006).
+ * Unknown codes become errors (BRX-013); unsafe total quantities are a technical guard.
  */
 export function normalizeOrderItems(order: Order): { items: OrderItem[]; errors: string[] } {
   const { products } = getCatalog();
@@ -17,7 +17,7 @@ export function normalizeOrderItems(order: Order): { items: OrderItem[]; errors:
     quantities.set(item.product_code, total);
   }
 
-  // 2. Sort by product code so items and errors come out in a stable order (OPEN-005).
+  // 2. Sort by product code so items and errors come out in a stable order.
   const sorted = [...quantities].sort(([left], [right]) => compareText(left, right));
 
   const items: OrderItem[] = [];

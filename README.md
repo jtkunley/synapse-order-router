@@ -3,8 +3,7 @@
 HTTP service that routes multi-item durable-medical-equipment orders to eligible
 suppliers. Built for the Synapse Health take-home assessment.
 
-Authoritative behavior: [BUSINESS_RULES.md](./BUSINESS_RULES.md). Rule→test matrix:
-[BUSINESS_RULES_COVERAGE.md](./BUSINESS_RULES_COVERAGE.md). Project conventions:
+Authoritative behavior: [BUSINESS_RULES.md](./BUSINESS_RULES.md). Project conventions:
 [CLAUDE.md](./CLAUDE.md). Prompt trail: [AI_PROMPTS.md](./AI_PROMPTS.md).
 
 ## Quick start
@@ -79,9 +78,9 @@ tests/unit|component/  Mirrored *.test.ts layout
 
 ## Routing summary
 
-Selection priorities (see `BUS_RULE-015`…`020`): feasibility → fewer shipments →
-higher satisfaction → local preference when ratings are similar. Open-policy
-choices are recorded under **Implemented open-policy choices** in
+Routing priorities (see `BR-015`…`020`): feasibility → fewer shipments →
+higher customer satisfaction → local fulfillment when satisfaction scores are similar.
+Decisions for gaps in the assessment are recorded as auxiliary rules (`BRX-xxx`) in
 [BUSINESS_RULES.md](./BUSINESS_RULES.md).
 
 ## Docker

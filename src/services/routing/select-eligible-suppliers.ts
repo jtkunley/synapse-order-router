@@ -11,7 +11,7 @@ type Ranked = Pick<Plan, 'score' | 'supplierIds'>;
 
 /**
  * Choose a minimum-shipment cover, then apply quality and local preference
- * (BUS_RULE-016…019, OPEN-002…005). Search is exact over the given eligible suppliers.
+ * (BR-016…019, BRX-002…005). Search is exact over the given eligible suppliers.
  */
 export function selectEligibleSuppliers(
   eligibleSuppliers: EligibleSupplier[],
@@ -105,7 +105,7 @@ function findMinimumPlans(
   return [...bestByMailCount.values()];
 }
 
-/** Similar-quality plans compete on fewer mail shipments (OPEN-004, OPEN-005). */
+/** Similar-quality plans compete on fewer mail shipments (BRX-004, BRX-005). */
 function choosePlan(plans: Plan[]): Plan {
   // Every plan has the same (minimum) number of suppliers.
   const supplierCount = plans[0]!.suppliers.length;

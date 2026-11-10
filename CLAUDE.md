@@ -30,8 +30,9 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 
 ## Business behavior
 
-- Authoritative product rules: `BUSINESS_RULES.md` (`BUS_RULE-xxx`; open policies `OPEN-xxx`).
-- Tests that assert a rule cite it in a comment (`// BUS_RULE-001` or `// BUS_RULE-001, BUS_RULE-022`); matrix in `BUSINESS_RULES_COVERAGE.md`.
+- Authoritative product rules: `BUSINESS_RULES.md` (assessment rules `BR-xxx`; auxiliary rules `BRX-xxx`).
+- Name domain code after the "Domain language" table in `BUSINESS_RULES.md`.
+- Tests that assert a rule cite it in a comment (`// BR-001` or `// BR-001, BRX-002`).
 - `POST /api/route` returns routing decisions; `feasible` is the business outcome flag.
 - Do not invent stock, pricing, capacity, or delivery-time rules.
-- When changing routing behavior, update or reconcile `BUSINESS_RULES.md` open-policy decisions.
+- When changing routing behavior, update or reconcile the `BUSINESS_RULES.md` auxiliary rules (`BRX-xxx`).

@@ -20,9 +20,9 @@ export function setCatalog(catalog: Catalog): void {
 
 /**
  * Load `products.csv` and `suppliers.csv` from a directory into the catalog
- * returned by `getCatalog()` (BUS_RULE-002…007).
+ * returned by `getCatalog()` (BR-002…007).
  * Missing or malformed data rejects; repeated product codes and supplier IDs keep
- * the first row and warn once per skipped row (OPEN-007).
+ * the first row and warn once per skipped row (BRX-012).
  */
 export async function loadCatalog(directory: string): Promise<void> {
   const [productCsv, supplierCsv] = await Promise.all([

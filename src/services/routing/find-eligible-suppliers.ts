@@ -4,7 +4,7 @@ import { compareText } from './compare-text.js';
 import type { EligibleSupplier } from './types.js';
 
 /**
- * Build the supplier search space for this order (BUS_RULE-011…014, OPEN-001).
+ * Build the supplier search space for this order (BR-011…014, BRX-001).
  * Keep the best-rated supplier per identical coverage and local/mail mode.
  */
 export function findEligibleSuppliers(
@@ -42,7 +42,7 @@ export function findEligibleSuppliers(
   return [...bestByCoverageAndMode.values()].sort(compareEligibleSuppliers);
 }
 
-/** Higher rating wins; equal ratings fall back to the smaller supplier id (OPEN-005). */
+/** Higher rating wins; equal ratings fall back to the smaller supplier id (BRX-005). */
 function outranks(eligible: EligibleSupplier, previous: EligibleSupplier): boolean {
   if (eligible.score !== previous.score) return eligible.score > previous.score;
   return compareText(eligible.supplier.id, previous.supplier.id) < 0;
