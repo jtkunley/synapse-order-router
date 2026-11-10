@@ -1,18 +1,13 @@
 import type { Order } from '../../models/order.js';
-import type { Supplier } from '../../models/supplier.js';
 import { getCatalog } from '../catalog/index.js';
-import { bitCount } from './bit-count.js';
 import { compareText } from './compare-text.js';
 import type { Candidate } from './types.js';
 
 /**
  * Build the supplier search space for this order (BUS_RULE-011…014, OPEN-001).
- * Keep the best-rated supplier per identical coverage mask and local/mail mode.
+ * Keep the best-rated supplier per identical coverage and local/mail mode.
  */
-export function findEligibleCandidates(
-  order: Order,
-  categoryBits: ReadonlyMap<string, bigint>,
-): Candidate[] {
+export function findEligibleCandidates(order: Order, categories: readonly string[]): Candidate[] {
   const zip = Number(order.customer_zip);
   const bestByCoverageAndMode = new Map<string, Candidate>();
 
@@ -23,18 +18,17 @@ export function findEligibleCandidates(
     if (!local && !byMail) continue;
 
     // 2. It must carry at least one ordered category.
-    const mask = coverageMask(supplier, categoryBits);
-    if (mask === 0n) continue;
+    const covered = categories.filter((category) => supplier.categories.has(category));
+    if (covered.length === 0) continue;
 
     // 3. With identical coverage and mode, a lower-rated supplier cannot improve a route.
     const candidate: Candidate = {
       supplier,
-      mask,
+      covers: new Set(covered),
       local,
       score: supplier.rating ?? 0,
-      coverageCount: bitCount(mask),
     };
-    const key = `${mask}:${local}`;
+    const key = `${covered.join('\0')}:${local}`;
     const previous = bestByCoverageAndMode.get(key);
     if (!previous || outranks(candidate, previous)) {
       bestByCoverageAndMode.set(key, candidate);
@@ -43,15 +37,6 @@ export function findEligibleCandidates(
 
   // 4. Widest coverage first so the search finds small covers early.
   return [...bestByCoverageAndMode.values()].sort(compareCandidates);
-}
-
-/** Bits of the ordered categories this supplier carries. */
-function coverageMask(supplier: Supplier, categoryBits: ReadonlyMap<string, bigint>): bigint {
-  let mask = 0n;
-  for (const category of supplier.categories) {
-    mask |= categoryBits.get(category) ?? 0n;
-  }
-  return mask;
 }
 
 /** Higher rating wins; equal ratings fall back to the smaller supplier id (OPEN-005). */
@@ -63,7 +48,7 @@ function outranks(candidate: Candidate, previous: Candidate): boolean {
 /** Wider coverage, then higher rating, then local, then supplier id. */
 function compareCandidates(left: Candidate, right: Candidate): number {
   return (
-    right.coverageCount - left.coverageCount ||
+    right.covers.size - left.covers.size ||
     right.score - left.score ||
     Number(right.local) - Number(left.local) ||
     compareText(left.supplier.id, right.supplier.id)

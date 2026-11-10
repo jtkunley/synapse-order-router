@@ -9,14 +9,14 @@ export type Routing = RoutingSuccess['routing'];
 export type RoutedItem = Routing[number]['items'][number];
 export type OrderItem = Omit<RoutedItem, 'fulfillment_mode'>;
 
-/** Eligible supplier with the categories it can cover on this order encoded in `mask`. */
+/** Eligible supplier for this order. */
 export interface Candidate {
   supplier: Supplier;
-  mask: bigint;
+  /** Ordered categories this supplier carries. */
+  covers: ReadonlySet<string>;
   local: boolean;
   /** Unrated suppliers contribute 0 (OPEN-003). */
   score: number;
-  coverageCount: number;
 }
 
 export interface Plan {

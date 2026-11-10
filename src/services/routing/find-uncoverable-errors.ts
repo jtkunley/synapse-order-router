@@ -6,14 +6,13 @@ export function findUncoverableErrors(
   order: Order,
   items: readonly OrderItem[],
   candidates: readonly Candidate[],
-  categoryBits: ReadonlyMap<string, bigint>,
 ): string[] {
   // Every category at least one eligible supplier can cover.
-  const availableMask = candidates.reduce((mask, candidate) => mask | candidate.mask, 0n);
+  const available = new Set(candidates.flatMap((candidate) => [...candidate.covers]));
 
   const mailOrder = order.mail_order ? 'allowed' : 'disallowed';
   return items
-    .filter((item) => (availableMask & categoryBits.get(item.category)!) === 0n)
+    .filter((item) => !available.has(item.category))
     .map(
       (item) =>
         `No eligible supplier for ${item.product_code} (${item.category}) at ZIP ${order.customer_zip} with mail order ${mailOrder}.`,

@@ -1,4 +1,3 @@
-import { bitCount } from './bit-count.js';
 import { compareText } from './compare-text.js';
 import { planIds } from './plan-ids.js';
 import { EPSILON, SIMILAR_RATING_DIFFERENCE, type Candidate, type Plan } from './types.js';
@@ -11,19 +10,13 @@ type Ranked = Pick<Plan, 'score' | 'ids'>;
  */
 export function selectSuppliers(
   candidates: Candidate[],
-  categoryBits: ReadonlyMap<string, bigint>,
-  fullMask: bigint,
+  categories: readonly string[],
 ): Candidate[] {
   // 1. A quick greedy cover gives an upper bound on how many suppliers are needed.
-  const greedyCount = countGreedyCover(candidates, fullMask);
+  const greedyCount = countGreedyCover(candidates, categories);
 
   // 2. Exact search: the best plan per mail-shipment count among the smallest covers.
-  const { plans, supplierCount } = findMinimumPlans(
-    candidates,
-    categoryBits,
-    fullMask,
-    greedyCount,
-  );
+  const { plans, supplierCount } = findMinimumPlans(candidates, categories, greedyCount);
 
   // 3. Among plans of similar quality, prefer fewer mail shipments.
   const plan = choosePlan(plans, supplierCount);
@@ -34,19 +27,16 @@ export function selectSuppliers(
 }
 
 /** Number of suppliers a greedy cover uses; every category is known to be coverable. */
-function countGreedyCover(candidates: readonly Candidate[], fullMask: bigint): number {
-  const newCoverage = (candidate: Candidate, covered: bigint) =>
-    bitCount(candidate.mask & ~covered);
-
-  let covered = 0n;
+function countGreedyCover(candidates: readonly Candidate[], categories: readonly string[]): number {
+  const covered = new Set<string>();
   let count = 0;
-  while (covered !== fullMask) {
+  while (covered.size < categories.length) {
     // Take the supplier that adds the most still-uncovered categories.
     let best = candidates[0]!;
     for (const candidate of candidates) {
-      if (newCoverage(candidate, covered) > newCoverage(best, covered)) best = candidate;
+      if (countNew(candidate, covered) > countNew(best, covered)) best = candidate;
     }
-    covered |= best.mask;
+    for (const category of best.covers) covered.add(category);
     count++;
   }
   return count;
@@ -55,18 +45,17 @@ function countGreedyCover(candidates: readonly Candidate[], fullMask: bigint): n
 /** Depth-first search for every smallest cover, keeping the best plan per mail-shipment count. */
 function findMinimumPlans(
   candidates: readonly Candidate[],
-  categoryBits: ReadonlyMap<string, bigint>,
-  fullMask: bigint,
+  categories: readonly string[],
   upperBound: number,
 ): { plans: Plan[]; supplierCount: number } {
   // Branch on categories with the fewest options first; it keeps the search tree narrow.
-  const byCategory = [...categoryBits.values()]
-    .map((bit) => ({
-      bit,
-      options: candidates.filter((candidate) => (candidate.mask & bit) !== 0n),
+  const byCategory = categories
+    .map((category) => ({
+      category,
+      options: candidates.filter((candidate) => candidate.covers.has(category)),
     }))
     .sort((left, right) => left.options.length - right.options.length);
-  const maximumCoverage = Math.max(...candidates.map((candidate) => candidate.coverageCount));
+  const widestCoverage = Math.max(...candidates.map((candidate) => candidate.covers.size));
 
   let supplierCount = upperBound;
   const bestByMailCount = new Map<number, Plan>();
@@ -87,31 +76,37 @@ function findMinimumPlans(
     }
   }
 
-  function search(mask: bigint, chosen: Candidate[], score: number, mailCount: number): void {
-    if (mask === fullMask) {
+  function search(
+    covered: ReadonlySet<string>,
+    chosen: Candidate[],
+    score: number,
+    mailCount: number,
+  ): void {
+    if (covered.size === categories.length) {
       recordPlan(chosen, score, mailCount);
       return;
     }
 
     // Prune: even the widest suppliers could not finish within the current smallest size.
-    const remaining = fullMask & ~mask;
-    const fewestStillNeeded = Math.ceil(bitCount(remaining) / maximumCoverage);
+    const uncoveredCount = categories.length - covered.size;
+    const fewestStillNeeded = Math.ceil(uncoveredCount / widestCoverage);
     if (chosen.length + fewestStillNeeded > supplierCount) return;
 
     // Prune: the same coverage, size, and mail count was already reached with equal or
     // better quality. The remaining choices are identical, so this branch cannot win.
-    const key = `${mask}:${chosen.length}:${mailCount}`;
+    const coveredKey = categories.filter((category) => covered.has(category)).join('\0');
+    const key = `${coveredKey}:${chosen.length}:${mailCount}`;
     const current = { score, ids: planIds(chosen) };
     const previous = visited.get(key);
     if (previous && !isBetter(current, previous)) return;
     visited.set(key, current);
 
     // Branch on the first uncovered category: every cover includes one of its options.
-    const next = byCategory.find(({ bit }) => (remaining & bit) !== 0n)!;
+    const next = byCategory.find(({ category }) => !covered.has(category))!;
     for (const candidate of next.options) {
       chosen.push(candidate);
       search(
-        mask | candidate.mask,
+        new Set([...covered, ...candidate.covers]),
         chosen,
         score + candidate.score,
         mailCount + Number(!candidate.local),
@@ -120,7 +115,7 @@ function findMinimumPlans(
     }
   }
 
-  search(0n, [], 0, 0);
+  search(new Set(), [], 0, 0);
   return { plans: [...bestByMailCount.values()], supplierCount };
 }
 
@@ -139,6 +134,15 @@ function choosePlan(plans: Plan[], supplierCount: number): Plan {
       compareText(left.ids, right.ids),
   );
   return similar[0]!;
+}
+
+/** Categories this candidate would add that are not covered yet. */
+function countNew(candidate: Candidate, covered: ReadonlySet<string>): number {
+  let count = 0;
+  for (const category of candidate.covers) {
+    if (!covered.has(category)) count++;
+  }
+  return count;
 }
 
 /** Higher score wins; equal scores (within EPSILON) fall back to smaller supplier ids. */
