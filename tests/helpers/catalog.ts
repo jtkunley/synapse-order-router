@@ -1,15 +1,20 @@
 import type { Catalog } from '../../src/models/catalog.js';
-import type { OrderRequest } from '../../src/models/order-request.js';
+import type { Order } from '../../src/models/order.js';
 import type { Supplier } from '../../src/models/supplier.js';
+
+/** Serves only ZIP 10001, the default customer ZIP of `makeOrder`. */
+export const LOCAL_ZIPS = [{ start: 10001, end: 10001 }];
+/** Does not serve ZIP 10001. */
+export const REMOTE_ZIPS = [{ start: 20000, end: 20000 }];
 
 export function makeSupplier(
   overrides: Partial<Supplier> & Pick<Supplier, 'id' | 'supportedCategories'>,
 ): Supplier {
   return {
     name: overrides.name ?? overrides.id,
-    serviceZipRanges: overrides.serviceZipRanges ?? [{ start: 10001, end: 10001 }],
-    satisfactionScore: overrides.satisfactionScore ?? 5,
-    canMailOrder: overrides.canMailOrder ?? false,
+    serviceZipRanges: LOCAL_ZIPS,
+    satisfactionScore: 5,
+    canMailOrder: false,
     ...overrides,
   };
 }
@@ -26,13 +31,11 @@ export function makeCatalog(
   };
 }
 
-export function makeOrder(
-  overrides: Partial<OrderRequest> & Pick<OrderRequest, 'items'>,
-): OrderRequest {
+export function makeOrder(overrides: Partial<Order> & Pick<Order, 'lineItems'>): Order {
   return {
-    order_id: overrides.order_id ?? 'ORD-TEST',
-    customer_zip: overrides.customer_zip ?? '10001',
-    mail_order: overrides.mail_order ?? false,
-    items: overrides.items,
+    id: 'ORD-TEST',
+    customerZip: '10001',
+    allowsMailOrder: false,
+    ...overrides,
   };
 }

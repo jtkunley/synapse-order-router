@@ -1,448 +1,453 @@
 import { describe, expect, it } from 'vitest';
+import type { LineItem, Order } from '../../../src/models/order.js';
+import type { RoutingDecision, Shipment } from '../../../src/models/routing-decision.js';
+import type { Supplier } from '../../../src/models/supplier.js';
 import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
-import { toOrder, type OrderRequest } from '../../../src/models/order-request.js';
-import { toRoutingResponse } from '../../../src/models/routing-response.js';
-import { routeOrder as routeDomainOrder } from '../../../src/services/routing/index.js';
-import { makeCatalog, makeOrder, makeSupplier } from '../../helpers/catalog.js';
+import { routeOrder } from '../../../src/services/routing/index.js';
+import {
+  LOCAL_ZIPS,
+  REMOTE_ZIPS,
+  makeCatalog,
+  makeOrder,
+  makeSupplier,
+} from '../../helpers/catalog.js';
 
-function routeOrder(request: OrderRequest) {
-  return toRoutingResponse(routeDomainOrder(toOrder(request)));
+const PRODUCTS = { 'WC-1': 'wheelchair', 'OX-1': 'oxygen', 'CP-1': 'cpap' };
+
+function routeWith(
+  suppliers: Supplier[],
+  order: Order,
+  products: Record<string, string> = PRODUCTS,
+): RoutingDecision {
+  setCatalog(makeCatalog(products, suppliers));
+  return routeOrder(order);
+}
+
+/** One line item with quantity 1 per product code. */
+function lineItems(...productCodes: string[]): LineItem[] {
+  return productCodes.map((productCode) => ({ productCode, quantity: 1 }));
+}
+
+function shipmentsOf(decision: RoutingDecision): Shipment[] {
+  if (!decision.feasible) throw new Error(`Expected feasible: ${decision.errors.join('; ')}`);
+  return decision.shipments;
+}
+
+function supplierIdsOf(decision: RoutingDecision): string[] {
+  return shipmentsOf(decision).map((shipment) => shipment.supplier.id);
 }
 
 describe('routeOrder', () => {
-  // BUS_RULE-010, BUS_RULE-024, OPEN-006, OPEN-007
-  it('combines duplicate product lines and returns unknown-product errors', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
-        id: 'SUP-1',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 8,
-      }),
-    ]);
-    setCatalog(catalog);
+  describe('line items', () => {
+    // BR-010, BRX-006, BRX-007
+    it('combines repeated line items into one total assigned to one supplier', () => {
+      const decision = routeWith(
+        [makeSupplier({ id: 'SUP-1', supportedCategories: new Set(['wheelchair']) })],
+        makeOrder({
+          lineItems: [
+            { productCode: 'WC-1', quantity: 1 },
+            { productCode: 'WC-1', quantity: 2 },
+          ],
+        }),
+      );
 
-    const unknown = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: 1 },
-          { product_code: 'NOPE', quantity: 1 },
-        ],
-      }),
-    );
-    expect(unknown).toEqual({
-      feasible: false,
-      errors: ['Unknown product code: NOPE.'],
+      expect(shipmentsOf(decision)[0]?.lineItems).toEqual([
+        { productCode: 'WC-1', quantity: 3, category: 'wheelchair' },
+      ]);
     });
 
-    const combined = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: 1 },
-          { product_code: 'WC-1', quantity: 2 },
-        ],
-      }),
-    );
-    expect(combined.feasible).toBe(true);
-    if (!combined.feasible) return;
-    expect(combined.routing[0]?.items).toEqual([
-      {
-        product_code: 'WC-1',
-        quantity: 3,
-        category: 'wheelchair',
-        fulfillment_mode: 'local',
-      },
-    ]);
+    // BR-024, BR-026, BRX-013
+    it('is infeasible with one reason per unknown product code', () => {
+      const decision = routeWith(
+        [makeSupplier({ id: 'SUP-1', supportedCategories: new Set(['wheelchair']) })],
+        makeOrder({ lineItems: lineItems('WC-1', 'NOPE-2', 'NOPE-1') }),
+      );
 
-    const tooLarge = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: Number.MAX_SAFE_INTEGER },
-          { product_code: 'WC-1', quantity: 1 },
-        ],
-      }),
-    );
-    expect(tooLarge).toEqual({
-      feasible: false,
-      errors: ['Total quantity for WC-1 is too large.'],
+      expect(decision).toEqual({
+        feasible: false,
+        errors: ['Unknown product code: NOPE-1.', 'Unknown product code: NOPE-2.'],
+      });
+    });
+
+    // BRX-019
+    it('is infeasible when a combined total can no longer be represented exactly', () => {
+      const decision = routeWith(
+        [makeSupplier({ id: 'SUP-1', supportedCategories: new Set(['wheelchair']) })],
+        makeOrder({
+          lineItems: [
+            { productCode: 'WC-1', quantity: Number.MAX_SAFE_INTEGER },
+            { productCode: 'WC-1', quantity: 1 },
+          ],
+        }),
+      );
+
+      expect(decision).toEqual({
+        feasible: false,
+        errors: ['Total quantity for WC-1 is too large.'],
+      });
     });
   });
 
-  // BUS_RULE-012, BUS_RULE-013, BUS_RULE-015, OPEN-008
-  it('uses only local suppliers when mail_order is false', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
-        id: 'SUP-MAIL',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 20000, end: 20000 }],
-        canMailOrder: true,
-        satisfactionScore: 10,
-      }),
-    ]);
-    setCatalog(catalog);
+  describe('supplier eligibility', () => {
+    const remoteMailSupplier = makeSupplier({
+      id: 'SUP-MAIL',
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: REMOTE_ZIPS,
+      canMailOrder: true,
+    });
 
-    expect(
-      routeOrder(makeOrder({ mail_order: false, items: [{ product_code: 'WC-1', quantity: 1 }] })),
-    ).toMatchObject({ feasible: false });
+    // BR-012, BR-015
+    it('uses only suppliers serving the customer ZIP when mail order is not allowed', () => {
+      const decision = routeWith(
+        [remoteMailSupplier],
+        makeOrder({ allowsMailOrder: false, lineItems: lineItems('WC-1') }),
+      );
 
-    const routed = routeOrder(
-      makeOrder({ mail_order: true, items: [{ product_code: 'WC-1', quantity: 1 }] }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing[0]).toMatchObject({
-      supplier_id: 'SUP-MAIL',
-      items: [{ fulfillment_mode: 'mail_order' }],
+      expect(decision).toEqual({
+        feasible: false,
+        errors: [
+          'No eligible supplier for WC-1 (wheelchair) at ZIP 10001 with mail order disallowed.',
+        ],
+      });
+    });
+
+    // BR-013, BRX-014
+    it('accepts a mail-order-capable supplier regardless of ZIP when mail order is allowed', () => {
+      const decision = routeWith(
+        [remoteMailSupplier],
+        makeOrder({ allowsMailOrder: true, lineItems: lineItems('WC-1') }),
+      );
+
+      expect(shipmentsOf(decision)).toMatchObject([
+        { supplier: { id: 'SUP-MAIL' }, fulfillmentMode: 'mail_order' },
+      ]);
+    });
+
+    // BR-011, BR-014
+    it('still requires the product category when mail order is allowed', () => {
+      const decision = routeWith(
+        [remoteMailSupplier],
+        makeOrder({ allowsMailOrder: true, lineItems: lineItems('OX-1') }),
+      );
+
+      expect(decision).toEqual({
+        feasible: false,
+        errors: ['No eligible supplier for OX-1 (oxygen) at ZIP 10001 with mail order allowed.'],
+      });
+    });
+
+    // BR-015, BRX-009
+    it('is infeasible as a whole when any line item cannot be fulfilled', () => {
+      const decision = routeWith(
+        [makeSupplier({ id: 'SUP-1', supportedCategories: new Set(['wheelchair']) })],
+        makeOrder({ lineItems: lineItems('WC-1', 'OX-1') }),
+      );
+
+      expect(decision).toEqual({
+        feasible: false,
+        errors: ['No eligible supplier for OX-1 (oxygen) at ZIP 10001 with mail order disallowed.'],
+      });
+    });
+
+    // BRX-001
+    it('keeps a supplier serving the ZIP eligible without mail-order capability', () => {
+      const decision = routeWith(
+        [makeSupplier({ id: 'SUP-LOCAL', supportedCategories: new Set(['wheelchair']) })],
+        makeOrder({ allowsMailOrder: true, lineItems: lineItems('WC-1') }),
+      );
+
+      expect(shipmentsOf(decision)).toMatchObject([
+        { supplier: { id: 'SUP-LOCAL' }, fulfillmentMode: 'local' },
+      ]);
+    });
+
+    // BRX-015
+    it('uses local fulfillment for a supplier eligible both locally and by mail order', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-BOTH-WAYS',
+            supportedCategories: new Set(['wheelchair']),
+            serviceZipRanges: LOCAL_ZIPS,
+            canMailOrder: true,
+          }),
+        ],
+        makeOrder({ allowsMailOrder: true, lineItems: lineItems('WC-1') }),
+      );
+
+      expect(shipmentsOf(decision)[0]?.fulfillmentMode).toBe('local');
+    });
+
+    // BR-008
+    it('matches a leading-zero customer ZIP against service ZIP coverage', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-BOSTON',
+            supportedCategories: new Set(['cpap']),
+            serviceZipRanges: [{ start: 2130, end: 2130 }],
+          }),
+        ],
+        makeOrder({ customerZip: '02130', lineItems: lineItems('CP-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-BOSTON']);
     });
   });
 
-  // OPEN-001, BUS_RULE-018, OPEN-008
-  it('keeps local suppliers eligible when mail_order is true even without mail capability', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
+  describe('routing priorities', () => {
+    // BR-016, BR-019, BRX-002
+    it('prefers one shipment over two shipments with higher satisfaction scores', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-BOTH',
+            supportedCategories: new Set(['wheelchair', 'oxygen']),
+            satisfactionScore: 5,
+          }),
+          makeSupplier({
+            id: 'SUP-WC',
+            supportedCategories: new Set(['wheelchair']),
+            satisfactionScore: 10,
+          }),
+          makeSupplier({
+            id: 'SUP-OX',
+            supportedCategories: new Set(['oxygen']),
+            satisfactionScore: 10,
+          }),
+        ],
+        makeOrder({ lineItems: lineItems('WC-1', 'OX-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-BOTH']);
+    });
+
+    // BR-011, BR-016
+    it('finds the fewest shipments even when the broadest supplier is not part of them', () => {
+      const products = { A: 'a', B: 'b', C: 'c', D: 'd', E: 'e', F: 'f' };
+      const decision = routeWith(
+        [
+          makeSupplier({ id: 'BROADEST', supportedCategories: new Set(['a', 'b', 'c', 'd']) }),
+          makeSupplier({ id: 'LEFT', supportedCategories: new Set(['a', 'b', 'e']) }),
+          makeSupplier({ id: 'RIGHT', supportedCategories: new Set(['c', 'd', 'f']) }),
+          makeSupplier({ id: 'ONLY-E', supportedCategories: new Set(['e']) }),
+          makeSupplier({ id: 'ONLY-F', supportedCategories: new Set(['f']) }),
+          makeSupplier({
+            id: 'UNRELATED',
+            supportedCategories: new Set(['zzz']),
+            satisfactionScore: 10,
+          }),
+        ],
+        makeOrder({ lineItems: lineItems('A', 'B', 'C', 'D', 'E', 'F') }),
+        products,
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['LEFT', 'RIGHT']);
+    });
+
+    // BR-017
+    it('prefers the higher customer satisfaction score among single-supplier plans', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-LOW',
+            supportedCategories: new Set(['wheelchair']),
+            satisfactionScore: 4,
+          }),
+          makeSupplier({
+            id: 'SUP-HIGH',
+            supportedCategories: new Set(['wheelchair']),
+            satisfactionScore: 9,
+          }),
+        ],
+        makeOrder({ lineItems: lineItems('WC-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-HIGH']);
+    });
+
+    // BR-017, BRX-003
+    it('prefers the higher total satisfaction among equally small multi-supplier plans', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-WC-OX',
+            supportedCategories: new Set(['wheelchair', 'oxygen']),
+            satisfactionScore: 5,
+          }),
+          makeSupplier({
+            id: 'SUP-CP',
+            supportedCategories: new Set(['cpap']),
+            satisfactionScore: 5,
+          }),
+          makeSupplier({
+            id: 'SUP-WC-CP',
+            supportedCategories: new Set(['wheelchair', 'cpap']),
+            satisfactionScore: 9,
+          }),
+          makeSupplier({
+            id: 'SUP-OX',
+            supportedCategories: new Set(['oxygen']),
+            satisfactionScore: 9,
+          }),
+        ],
+        makeOrder({ lineItems: lineItems('WC-1', 'OX-1', 'CP-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-OX', 'SUP-WC-CP']);
+    });
+
+    // BRX-003
+    it('compares an unrated supplier as a score of zero', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({
+            id: 'SUP-A-UNRATED',
+            supportedCategories: new Set(['wheelchair']),
+            satisfactionScore: null,
+          }),
+          makeSupplier({
+            id: 'SUP-B-RATED',
+            supportedCategories: new Set(['wheelchair']),
+            satisfactionScore: 1,
+          }),
+        ],
+        makeOrder({ lineItems: lineItems('WC-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-B-RATED']);
+    });
+
+    describe('local versus mail-order fulfillment', () => {
+      const local = makeSupplier({
         id: 'SUP-LOCAL',
         supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        canMailOrder: false,
-        satisfactionScore: 6,
-      }),
-      makeSupplier({
-        id: 'SUP-MAIL',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 20000, end: 20000 }],
-        canMailOrder: true,
-        satisfactionScore: 6,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(
-      makeOrder({ mail_order: true, items: [{ product_code: 'WC-1', quantity: 1 }] }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing[0]?.supplier_id).toBe('SUP-LOCAL');
-    expect(routed.routing[0]?.items[0]?.fulfillment_mode).toBe('local');
-  });
-
-  // BUS_RULE-016, BUS_RULE-019, OPEN-002
-  it('prefers consolidation over a higher total rating with more shipments', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
-      makeSupplier({
-        id: 'SUP-BOTH',
-        supportedCategories: new Set(['wheelchair', 'oxygen']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 5,
-      }),
-      makeSupplier({
-        id: 'SUP-WC',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 10,
-      }),
-      makeSupplier({
-        id: 'SUP-OX',
-        supportedCategories: new Set(['oxygen']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 10,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: 1 },
-          { product_code: 'OX-1', quantity: 1 },
-        ],
-      }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing.map((group) => group.supplier_id)).toEqual(['SUP-BOTH']);
-  });
-
-  // BUS_RULE-017
-  it('prefers higher satisfaction among otherwise equal single-supplier options', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
-        id: 'SUP-LOW',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 4,
-      }),
-      makeSupplier({
-        id: 'SUP-HIGH',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 9,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }));
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing[0]?.supplier_id).toBe('SUP-HIGH');
-  });
-
-  // BUS_RULE-017, BUS_RULE-018, OPEN-004, OPEN-008
-  it('prefers local fulfillment when ratings are similar, otherwise prefers quality', () => {
-    const products = { 'WC-1': 'wheelchair' };
-    const local = makeSupplier({
-      id: 'SUP-LOCAL',
-      supportedCategories: new Set(['wheelchair']),
-      serviceZipRanges: [{ start: 10001, end: 10001 }],
-      canMailOrder: false,
-      satisfactionScore: 8,
-    });
-    const similarMail = makeSupplier({
-      id: 'SUP-MAIL-SIMILAR',
-      supportedCategories: new Set(['wheelchair']),
-      serviceZipRanges: [{ start: 20000, end: 20000 }],
-      canMailOrder: true,
-      satisfactionScore: 8.4,
-    });
-    const betterMail = makeSupplier({
-      id: 'SUP-MAIL-BETTER',
-      supportedCategories: new Set(['wheelchair']),
-      serviceZipRanges: [{ start: 20000, end: 20000 }],
-      canMailOrder: true,
-      satisfactionScore: 9.5,
-    });
-
-    setCatalog(makeCatalog(products, [local, similarMail]));
-    const preferLocal = routeOrder(
-      makeOrder({
-        mail_order: true,
-        items: [{ product_code: 'WC-1', quantity: 1 }],
-      }),
-    );
-    expect(preferLocal.feasible).toBe(true);
-    if (!preferLocal.feasible) return;
-    expect(preferLocal.routing[0]?.supplier_id).toBe('SUP-LOCAL');
-
-    setCatalog(makeCatalog(products, [local, betterMail]));
-    const preferQuality = routeOrder(
-      makeOrder({
-        mail_order: true,
-        items: [{ product_code: 'WC-1', quantity: 1 }],
-      }),
-    );
-    expect(preferQuality.feasible).toBe(true);
-    if (!preferQuality.feasible) return;
-    expect(preferQuality.routing[0]?.supplier_id).toBe('SUP-MAIL-BETTER');
-    expect(preferQuality.routing[0]?.items[0]?.fulfillment_mode).toBe('mail_order');
-  });
-
-  // BUS_RULE-011, BUS_RULE-015, BUS_RULE-020, BUS_RULE-027
-  it('splits across suppliers when no single supplier covers every category', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
-      makeSupplier({
-        id: 'SUP-WC',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
         satisfactionScore: 8,
-      }),
-      makeSupplier({
-        id: 'SUP-OX',
-        supportedCategories: new Set(['oxygen']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: 7,
-      }),
-    ]);
-    setCatalog(catalog);
+      });
+      const mailScoring = (satisfactionScore: number) =>
+        makeSupplier({
+          id: 'SUP-MAIL',
+          supportedCategories: new Set(['wheelchair']),
+          serviceZipRanges: REMOTE_ZIPS,
+          canMailOrder: true,
+          satisfactionScore,
+        });
+      const order = makeOrder({ allowsMailOrder: true, lineItems: lineItems('WC-1') });
 
-    const routed = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: 1 },
-          { product_code: 'OX-1', quantity: 1 },
+      // BR-018, BRX-004, BRX-005
+      it('prefers local fulfillment when the mail-order score is at most 0.5 higher', () => {
+        expect(supplierIdsOf(routeWith([local, mailScoring(8.5)], order))).toEqual(['SUP-LOCAL']);
+      });
+
+      // BR-017, BR-019, BRX-004
+      it('prefers the higher score when it is more than 0.5 higher', () => {
+        const decision = routeWith([local, mailScoring(8.6)], order);
+
+        expect(shipmentsOf(decision)).toMatchObject([
+          { supplier: { id: 'SUP-MAIL' }, fulfillmentMode: 'mail_order' },
+        ]);
+      });
+    });
+
+    describe('similar satisfaction in multi-supplier plans', () => {
+      const localSuppliers = [
+        makeSupplier({
+          id: 'SUP-LOCAL-WC',
+          supportedCategories: new Set(['wheelchair']),
+          satisfactionScore: 7,
+        }),
+        makeSupplier({
+          id: 'SUP-LOCAL-OX',
+          supportedCategories: new Set(['oxygen']),
+          satisfactionScore: 7,
+        }),
+      ];
+      const mailScoring = (satisfactionScore: number) =>
+        makeSupplier({
+          id: 'SUP-MAIL-WC',
+          supportedCategories: new Set(['wheelchair']),
+          serviceZipRanges: REMOTE_ZIPS,
+          canMailOrder: true,
+          satisfactionScore,
+        });
+      const order = makeOrder({ allowsMailOrder: true, lineItems: lineItems('WC-1', 'OX-1') });
+
+      // BR-018, BRX-004, BRX-005
+      it('compares average scores: totals 14 and 15 average 7 and 7.5, so they are similar', () => {
+        const decision = routeWith([...localSuppliers, mailScoring(8)], order);
+
+        expect(supplierIdsOf(decision)).toEqual(['SUP-LOCAL-OX', 'SUP-LOCAL-WC']);
+      });
+
+      // BR-017, BRX-004
+      it('prefers the higher average when it is more than 0.5 higher', () => {
+        const decision = routeWith([...localSuppliers, mailScoring(8.2)], order);
+
+        expect(supplierIdsOf(decision)).toEqual(['SUP-LOCAL-OX', 'SUP-MAIL-WC']);
+      });
+    });
+
+    // BRX-005
+    it('breaks remaining ties with the smaller supplier ID', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({ id: 'SUP-B', supportedCategories: new Set(['wheelchair']) }),
+          makeSupplier({ id: 'SUP-A', supportedCategories: new Set(['wheelchair']) }),
         ],
-      }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing.map((group) => group.supplier_id).sort()).toEqual(['SUP-OX', 'SUP-WC']);
-    expect(
-      routed.routing.flatMap((group) => group.items.map((item) => item.product_code)).sort(),
-    ).toEqual(['OX-1', 'WC-1']);
+        makeOrder({ lineItems: lineItems('WC-1') }),
+      );
+
+      expect(supplierIdsOf(decision)).toEqual(['SUP-A']);
+    });
   });
 
-  // BUS_RULE-017, OPEN-003
-  it('prefers the higher total rating among equally small multi-supplier covers', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen', 'CP-1': 'cpap' }, [
-      makeSupplier({
-        id: 'SUP-WC-OX',
-        supportedCategories: new Set(['wheelchair', 'oxygen']),
-        satisfactionScore: 5,
-      }),
-      makeSupplier({ id: 'SUP-CP', supportedCategories: new Set(['cpap']), satisfactionScore: 5 }),
-      makeSupplier({
-        id: 'SUP-WC-CP',
-        supportedCategories: new Set(['wheelchair', 'cpap']),
-        satisfactionScore: 9,
-      }),
-      makeSupplier({
-        id: 'SUP-OX',
-        supportedCategories: new Set(['oxygen']),
-        satisfactionScore: 9,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(
-      makeOrder({
-        items: [
-          { product_code: 'WC-1', quantity: 1 },
-          { product_code: 'OX-1', quantity: 1 },
-          { product_code: 'CP-1', quantity: 1 },
+  describe('line-item assignment', () => {
+    // BR-011, BR-020, BR-027
+    it('splits the order across suppliers and accounts for every line item and quantity', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({ id: 'SUP-WC', supportedCategories: new Set(['wheelchair']) }),
+          makeSupplier({ id: 'SUP-OX', supportedCategories: new Set(['oxygen']) }),
         ],
-      }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing.map((group) => group.supplier_id)).toEqual(['SUP-OX', 'SUP-WC-CP']);
-  });
-
-  // BUS_RULE-008
-  it('matches leading-zero customer ZIPs against numeric supplier coverage', () => {
-    const catalog = makeCatalog({ 'CP-1': 'cpap' }, [
-      makeSupplier({
-        id: 'SUP-BOS',
-        supportedCategories: new Set(['cpap']),
-        serviceZipRanges: [{ start: 2130, end: 2130 }],
-        satisfactionScore: 8,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(
-      makeOrder({
-        customer_zip: '02130',
-        items: [{ product_code: 'CP-1', quantity: 1 }],
-      }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing[0]?.supplier_id).toBe('SUP-BOS');
-  });
-
-  // OPEN-003, OPEN-005
-  it('treats unrated suppliers as score 0 and breaks equal ties by supplier id', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
-        id: 'SUP-B',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: null,
-      }),
-      makeSupplier({
-        id: 'SUP-A',
-        supportedCategories: new Set(['wheelchair']),
-        serviceZipRanges: [{ start: 10001, end: 10001 }],
-        satisfactionScore: null,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    const routed = routeOrder(makeOrder({ items: [{ product_code: 'WC-1', quantity: 1 }] }));
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing[0]?.supplier_id).toBe('SUP-A');
-  });
-
-  // BUS_RULE-016, BUS_RULE-011
-  it('improves on a suboptimal greedy cover and ignores irrelevant suppliers', () => {
-    const catalog = makeCatalog(
-      {
-        A: 'a',
-        B: 'b',
-        C: 'c',
-        D: 'd',
-        E: 'e',
-        F: 'f',
-      },
-      [
-        makeSupplier({
-          id: 'GREEDY-WIDE',
-          supportedCategories: new Set(['a', 'b', 'c', 'd']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 1,
-        }),
-        makeSupplier({
-          id: 'OPT-LEFT',
-          supportedCategories: new Set(['a', 'b', 'e']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 1,
-        }),
-        makeSupplier({
-          id: 'OPT-RIGHT',
-          supportedCategories: new Set(['c', 'd', 'f']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 1,
-        }),
-        makeSupplier({
-          id: 'SINGLE-E',
-          supportedCategories: new Set(['e']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 1,
-        }),
-        makeSupplier({
-          id: 'SINGLE-F',
-          supportedCategories: new Set(['f']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 1,
-        }),
-        makeSupplier({
-          id: 'IRRELEVANT',
-          supportedCategories: new Set(['zzz']),
-          serviceZipRanges: [{ start: 10001, end: 10001 }],
-          satisfactionScore: 10,
-        }),
-      ],
-    );
-    setCatalog(catalog);
-
-    const routed = routeOrder(
-      makeOrder({
-        items: ['A', 'B', 'C', 'D', 'E', 'F'].map((product_code) => ({
-          product_code,
-          quantity: 1,
-        })),
-      }),
-    );
-    expect(routed.feasible).toBe(true);
-    if (!routed.feasible) return;
-    expect(routed.routing.map((group) => group.supplier_id).sort()).toEqual([
-      'OPT-LEFT',
-      'OPT-RIGHT',
-    ]);
-  });
-
-  // BUS_RULE-011, BUS_RULE-014, BUS_RULE-015, BUS_RULE-024
-  it('reports infeasible mail-order failures when no supplier can cover a category', () => {
-    const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
-      makeSupplier({
-        id: 'SUP-REMOTE',
-        supportedCategories: new Set(['oxygen']),
-        serviceZipRanges: [{ start: 20000, end: 20000 }],
-        canMailOrder: true,
-        satisfactionScore: 9,
-      }),
-    ]);
-    setCatalog(catalog);
-
-    expect(
-      routeOrder(
         makeOrder({
-          mail_order: true,
-          items: [{ product_code: 'WC-1', quantity: 1 }],
+          lineItems: [
+            { productCode: 'WC-1', quantity: 1 },
+            { productCode: 'OX-1', quantity: 2 },
+          ],
         }),
-      ),
-    ).toEqual({
-      feasible: false,
-      errors: ['No eligible supplier for WC-1 (wheelchair) at ZIP 10001 with mail order allowed.'],
+      );
+
+      expect(shipmentsOf(decision)).toMatchObject([
+        {
+          supplier: { id: 'SUP-OX' },
+          lineItems: [{ productCode: 'OX-1', quantity: 2, category: 'oxygen' }],
+        },
+        {
+          supplier: { id: 'SUP-WC' },
+          lineItems: [{ productCode: 'WC-1', quantity: 1, category: 'wheelchair' }],
+        },
+      ]);
+    });
+
+    // BRX-008
+    it('assigns a line item two selected suppliers support to the smaller supplier ID', () => {
+      const decision = routeWith(
+        [
+          makeSupplier({ id: 'SUP-B', supportedCategories: new Set(['wheelchair', 'oxygen']) }),
+          makeSupplier({ id: 'SUP-A', supportedCategories: new Set(['wheelchair', 'cpap']) }),
+        ],
+        makeOrder({ lineItems: lineItems('WC-1', 'OX-1', 'CP-1') }),
+      );
+
+      expect(
+        shipmentsOf(decision).map((shipment) => ({
+          supplierId: shipment.supplier.id,
+          productCodes: shipment.lineItems.map((lineItem) => lineItem.productCode),
+        })),
+      ).toEqual([
+        { supplierId: 'SUP-A', productCodes: ['CP-1', 'WC-1'] },
+        { supplierId: 'SUP-B', productCodes: ['OX-1'] },
+      ]);
     });
   });
 });
