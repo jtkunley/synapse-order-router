@@ -3,12 +3,12 @@ import type { Order } from '../../src/models/order.js';
 import type { Supplier } from '../../src/models/supplier.js';
 
 export function makeSupplier(
-  overrides: Partial<Supplier> & Pick<Supplier, 'id' | 'categories'>,
+  overrides: Partial<Supplier> & Pick<Supplier, 'id' | 'supportedCategories'>,
 ): Supplier {
   return {
     name: overrides.name ?? overrides.id,
-    zipRanges: overrides.zipRanges ?? [{ start: 10001, end: 10001 }],
-    rating: overrides.rating ?? 5,
+    serviceZipRanges: overrides.serviceZipRanges ?? [{ start: 10001, end: 10001 }],
+    satisfactionScore: overrides.satisfactionScore ?? 5,
     canMailOrder: overrides.canMailOrder ?? false,
     ...overrides,
   };

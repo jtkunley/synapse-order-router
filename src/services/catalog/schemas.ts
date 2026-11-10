@@ -8,7 +8,7 @@ const text = z.string().trim().min(1);
 const category = text.toLowerCase();
 
 /** "10001-10099, 2134" → [{ start: 10001, end: 10099 }, { start: 2134, end: 2134 }]. */
-const zipRanges = text.transform((value, context) => {
+const serviceZipRanges = text.transform((value, context) => {
   const ranges: { start: number; end: number }[] = [];
   for (const entry of value.split(',').map((part) => part.trim())) {
     const range = parseZipRange(entry);
@@ -23,15 +23,15 @@ const zipRanges = text.transform((value, context) => {
 
 /** "No ratings yet" → null (BR-006); otherwise a number from 1 to 10. */
 const unrated = z.literal('no ratings yet').transform(() => null);
-const numericRating = z
+const numericScore = z
   .string()
   .regex(/^\d+(?:\.\d+)?$/)
   .transform(Number)
   .pipe(z.number().min(1).max(10));
-const rating = text.toLowerCase().pipe(z.union([unrated, numericRating]));
+const satisfactionScore = text.toLowerCase().pipe(z.union([unrated, numericScore]));
 
 /** "Wheelchair, Walker" → Set { "wheelchair", "walker" }; at least one category. */
-const categoryList = text
+const supportedCategories = text
   .transform((value) => value.split(','))
   .pipe(z.array(category).min(1))
   .transform((categories) => new Set(categories));
@@ -50,17 +50,17 @@ export const supplierSchema: z.ZodType<Supplier> = z
   .object({
     supplier_id: text,
     supplier_name: text,
-    service_zips: zipRanges,
-    product_categories: categoryList,
-    customer_satisfaction_score: rating,
+    service_zips: serviceZipRanges,
+    product_categories: supportedCategories,
+    customer_satisfaction_score: satisfactionScore,
     'can_mail_order?': yesNo,
   })
   .transform((row) => ({
     id: row.supplier_id,
     name: row.supplier_name,
-    zipRanges: row.service_zips,
-    categories: row.product_categories,
-    rating: row.customer_satisfaction_score,
+    serviceZipRanges: row.service_zips,
+    supportedCategories: row.product_categories,
+    satisfactionScore: row.customer_satisfaction_score,
     canMailOrder: row['can_mail_order?'],
   }));
 

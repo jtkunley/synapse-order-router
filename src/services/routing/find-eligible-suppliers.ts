@@ -16,12 +16,12 @@ export function findEligibleSuppliers(
 
   for (const supplier of getCatalog().suppliers) {
     // 1. The supplier must cover the ZIP, or ship by mail when the order allows it.
-    const local = supplier.zipRanges.some(({ start, end }) => zip >= start && zip <= end);
+    const local = supplier.serviceZipRanges.some(({ start, end }) => zip >= start && zip <= end);
     const byMail = order.mail_order && supplier.canMailOrder;
     if (!local && !byMail) continue;
 
     // 2. It must carry at least one ordered category.
-    const covered = categories.filter((category) => supplier.categories.has(category));
+    const covered = categories.filter((category) => supplier.supportedCategories.has(category));
     if (covered.length === 0) continue;
 
     // 3. With identical coverage and mode, a lower-rated supplier cannot improve a route.
@@ -29,7 +29,7 @@ export function findEligibleSuppliers(
       supplier,
       covers: new Set(covered),
       local,
-      score: supplier.rating ?? 0,
+      score: supplier.satisfactionScore ?? 0,
     };
     const key = `${covered.join('\0')}:${local}`;
     const previous = bestByCoverageAndMode.get(key);

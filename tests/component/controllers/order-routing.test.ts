@@ -34,9 +34,9 @@ describe('POST /api/route', () => {
       makeSupplier({
         id: 'SUP-1',
         name: 'Local Supply',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 8,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 8,
       }),
     ]);
 
@@ -76,8 +76,8 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-1',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
       }),
     ]);
 
@@ -98,10 +98,10 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-REMOTE',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 10,
+        satisfactionScore: 10,
       }),
     ]);
 
@@ -137,17 +137,17 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-MAIL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 10,
+        satisfactionScore: 10,
       }),
       makeSupplier({
         id: 'SUP-LOCAL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
         canMailOrder: false,
-        rating: 5,
+        satisfactionScore: 5,
       }),
     ]);
 
@@ -171,10 +171,10 @@ describe('POST /api/route', () => {
     const mailWheelchairOnly = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-MAIL-WC',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 8,
+        satisfactionScore: 8,
       }),
     ]);
 
@@ -211,17 +211,17 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOCAL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
         canMailOrder: false,
-        rating: 6,
+        satisfactionScore: 6,
       }),
       makeSupplier({
         id: 'SUP-MAIL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 6,
+        satisfactionScore: 6,
       }),
     ]);
 
@@ -244,21 +244,21 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-BOTH',
-        categories: new Set(['wheelchair', 'oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 5,
+        supportedCategories: new Set(['wheelchair', 'oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 5,
       }),
       makeSupplier({
         id: 'SUP-WC',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 10,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 10,
       }),
       makeSupplier({
         id: 'SUP-OX',
-        categories: new Set(['oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 10,
+        supportedCategories: new Set(['oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 10,
       }),
     ]);
 
@@ -285,15 +285,15 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOW',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 4,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 4,
       }),
       makeSupplier({
         id: 'SUP-HIGH',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 9,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 9,
       }),
     ]);
 
@@ -315,10 +315,10 @@ describe('POST /api/route', () => {
     const products = { 'WC-1': 'wheelchair' };
     const local = makeSupplier({
       id: 'SUP-LOCAL',
-      categories: new Set(['wheelchair']),
-      zipRanges: [{ start: 10001, end: 10001 }],
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: [{ start: 10001, end: 10001 }],
       canMailOrder: false,
-      rating: 8,
+      satisfactionScore: 8,
     });
 
     const similar = await request(
@@ -326,10 +326,10 @@ describe('POST /api/route', () => {
         local,
         makeSupplier({
           id: 'SUP-MAIL-SIMILAR',
-          categories: new Set(['wheelchair']),
-          zipRanges: [{ start: 20000, end: 20000 }],
+          supportedCategories: new Set(['wheelchair']),
+          serviceZipRanges: [{ start: 20000, end: 20000 }],
           canMailOrder: true,
-          rating: 8.4,
+          satisfactionScore: 8.4,
         }),
       ]),
     )
@@ -348,10 +348,10 @@ describe('POST /api/route', () => {
         local,
         makeSupplier({
           id: 'SUP-MAIL-BETTER',
-          categories: new Set(['wheelchair']),
-          zipRanges: [{ start: 20000, end: 20000 }],
+          supportedCategories: new Set(['wheelchair']),
+          serviceZipRanges: [{ start: 20000, end: 20000 }],
           canMailOrder: true,
-          rating: 9.5,
+          satisfactionScore: 9.5,
         }),
       ]),
     )
@@ -372,15 +372,15 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-WC',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 8,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 8,
       }),
       makeSupplier({
         id: 'SUP-OX',
-        categories: new Set(['oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 7,
+        supportedCategories: new Set(['oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 7,
       }),
     ]);
 
@@ -414,9 +414,9 @@ describe('POST /api/route', () => {
     const app = await appWithCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
         id: 'SUP-BOS',
-        categories: new Set(['cpap']),
-        zipRanges: [{ start: 2130, end: 2130 }],
-        rating: 8,
+        supportedCategories: new Set(['cpap']),
+        serviceZipRanges: [{ start: 2130, end: 2130 }],
+        satisfactionScore: 8,
       }),
     ]);
 

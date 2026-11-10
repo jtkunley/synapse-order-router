@@ -17,7 +17,9 @@ export function buildRouting(
 
   // 2. Each item goes to the first selected supplier that carries its category.
   for (const item of items) {
-    const index = selected.findIndex(({ supplier }) => supplier.categories.has(item.category));
+    const index = selected.findIndex(({ supplier }) =>
+      supplier.supportedCategories.has(item.category),
+    );
     const fulfillment_mode = selected[index]!.local ? 'local' : 'mail_order';
     routing[index]!.items.push({ ...item, fulfillment_mode });
   }

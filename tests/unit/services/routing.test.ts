@@ -9,9 +9,9 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-1',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 8,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 8,
       }),
     ]);
     setCatalog(catalog);
@@ -67,10 +67,10 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-MAIL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 10,
+        satisfactionScore: 10,
       }),
     ]);
     setCatalog(catalog);
@@ -95,17 +95,17 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOCAL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
         canMailOrder: false,
-        rating: 6,
+        satisfactionScore: 6,
       }),
       makeSupplier({
         id: 'SUP-MAIL',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 6,
+        satisfactionScore: 6,
       }),
     ]);
     setCatalog(catalog);
@@ -124,21 +124,21 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-BOTH',
-        categories: new Set(['wheelchair', 'oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 5,
+        supportedCategories: new Set(['wheelchair', 'oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 5,
       }),
       makeSupplier({
         id: 'SUP-WC',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 10,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 10,
       }),
       makeSupplier({
         id: 'SUP-OX',
-        categories: new Set(['oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 10,
+        supportedCategories: new Set(['oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 10,
       }),
     ]);
     setCatalog(catalog);
@@ -161,15 +161,15 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOW',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 4,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 4,
       }),
       makeSupplier({
         id: 'SUP-HIGH',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 9,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 9,
       }),
     ]);
     setCatalog(catalog);
@@ -185,24 +185,24 @@ describe('routeOrder', () => {
     const products = { 'WC-1': 'wheelchair' };
     const local = makeSupplier({
       id: 'SUP-LOCAL',
-      categories: new Set(['wheelchair']),
-      zipRanges: [{ start: 10001, end: 10001 }],
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: [{ start: 10001, end: 10001 }],
       canMailOrder: false,
-      rating: 8,
+      satisfactionScore: 8,
     });
     const similarMail = makeSupplier({
       id: 'SUP-MAIL-SIMILAR',
-      categories: new Set(['wheelchair']),
-      zipRanges: [{ start: 20000, end: 20000 }],
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: [{ start: 20000, end: 20000 }],
       canMailOrder: true,
-      rating: 8.4,
+      satisfactionScore: 8.4,
     });
     const betterMail = makeSupplier({
       id: 'SUP-MAIL-BETTER',
-      categories: new Set(['wheelchair']),
-      zipRanges: [{ start: 20000, end: 20000 }],
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: [{ start: 20000, end: 20000 }],
       canMailOrder: true,
-      rating: 9.5,
+      satisfactionScore: 9.5,
     });
 
     setCatalog(makeCatalog(products, [local, similarMail]));
@@ -234,15 +234,15 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-WC',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 8,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 8,
       }),
       makeSupplier({
         id: 'SUP-OX',
-        categories: new Set(['oxygen']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: 7,
+        supportedCategories: new Set(['oxygen']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: 7,
       }),
     ]);
     setCatalog(catalog);
@@ -266,10 +266,22 @@ describe('routeOrder', () => {
   // BUS_RULE-017, OPEN-003
   it('prefers the higher total rating among equally small multi-supplier covers', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen', 'CP-1': 'cpap' }, [
-      makeSupplier({ id: 'SUP-WC-OX', categories: new Set(['wheelchair', 'oxygen']), rating: 5 }),
-      makeSupplier({ id: 'SUP-CP', categories: new Set(['cpap']), rating: 5 }),
-      makeSupplier({ id: 'SUP-WC-CP', categories: new Set(['wheelchair', 'cpap']), rating: 9 }),
-      makeSupplier({ id: 'SUP-OX', categories: new Set(['oxygen']), rating: 9 }),
+      makeSupplier({
+        id: 'SUP-WC-OX',
+        supportedCategories: new Set(['wheelchair', 'oxygen']),
+        satisfactionScore: 5,
+      }),
+      makeSupplier({ id: 'SUP-CP', supportedCategories: new Set(['cpap']), satisfactionScore: 5 }),
+      makeSupplier({
+        id: 'SUP-WC-CP',
+        supportedCategories: new Set(['wheelchair', 'cpap']),
+        satisfactionScore: 9,
+      }),
+      makeSupplier({
+        id: 'SUP-OX',
+        supportedCategories: new Set(['oxygen']),
+        satisfactionScore: 9,
+      }),
     ]);
     setCatalog(catalog);
 
@@ -292,9 +304,9 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
         id: 'SUP-BOS',
-        categories: new Set(['cpap']),
-        zipRanges: [{ start: 2130, end: 2130 }],
-        rating: 8,
+        supportedCategories: new Set(['cpap']),
+        serviceZipRanges: [{ start: 2130, end: 2130 }],
+        satisfactionScore: 8,
       }),
     ]);
     setCatalog(catalog);
@@ -315,15 +327,15 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-B',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: null,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: null,
       }),
       makeSupplier({
         id: 'SUP-A',
-        categories: new Set(['wheelchair']),
-        zipRanges: [{ start: 10001, end: 10001 }],
-        rating: null,
+        supportedCategories: new Set(['wheelchair']),
+        serviceZipRanges: [{ start: 10001, end: 10001 }],
+        satisfactionScore: null,
       }),
     ]);
     setCatalog(catalog);
@@ -348,39 +360,39 @@ describe('routeOrder', () => {
       [
         makeSupplier({
           id: 'GREEDY-WIDE',
-          categories: new Set(['a', 'b', 'c', 'd']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 1,
+          supportedCategories: new Set(['a', 'b', 'c', 'd']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 1,
         }),
         makeSupplier({
           id: 'OPT-LEFT',
-          categories: new Set(['a', 'b', 'e']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 1,
+          supportedCategories: new Set(['a', 'b', 'e']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 1,
         }),
         makeSupplier({
           id: 'OPT-RIGHT',
-          categories: new Set(['c', 'd', 'f']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 1,
+          supportedCategories: new Set(['c', 'd', 'f']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 1,
         }),
         makeSupplier({
           id: 'SINGLE-E',
-          categories: new Set(['e']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 1,
+          supportedCategories: new Set(['e']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 1,
         }),
         makeSupplier({
           id: 'SINGLE-F',
-          categories: new Set(['f']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 1,
+          supportedCategories: new Set(['f']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 1,
         }),
         makeSupplier({
           id: 'IRRELEVANT',
-          categories: new Set(['zzz']),
-          zipRanges: [{ start: 10001, end: 10001 }],
-          rating: 10,
+          supportedCategories: new Set(['zzz']),
+          serviceZipRanges: [{ start: 10001, end: 10001 }],
+          satisfactionScore: 10,
         }),
       ],
     );
@@ -407,10 +419,10 @@ describe('routeOrder', () => {
     const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-REMOTE',
-        categories: new Set(['oxygen']),
-        zipRanges: [{ start: 20000, end: 20000 }],
+        supportedCategories: new Set(['oxygen']),
+        serviceZipRanges: [{ start: 20000, end: 20000 }],
         canMailOrder: true,
-        rating: 9,
+        satisfactionScore: 9,
       }),
     ]);
     setCatalog(catalog);

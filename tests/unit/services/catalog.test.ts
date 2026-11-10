@@ -18,27 +18,27 @@ describe('loadCatalog', () => {
     const local = catalog.suppliers.find((supplier) => supplier.id === 'SUP-LOCAL');
     expect(local).toMatchObject({
       name: 'Local Only',
-      rating: 8,
+      satisfactionScore: 8,
       canMailOrder: false,
-      zipRanges: [
+      serviceZipRanges: [
         { start: 10001, end: 10001 },
         { start: 2130, end: 2130 },
       ],
     });
-    expect(local?.categories).toEqual(new Set(['wheelchair', 'oxygen']));
+    expect(local?.supportedCategories).toEqual(new Set(['wheelchair', 'oxygen']));
 
     const mail = catalog.suppliers.find((supplier) => supplier.id === 'SUP-MAIL');
     expect(mail).toMatchObject({
-      rating: 7,
+      satisfactionScore: 7,
       canMailOrder: true,
-      zipRanges: [{ start: 100, end: 99999 }],
+      serviceZipRanges: [{ start: 100, end: 99999 }],
     });
 
     const range = catalog.suppliers.find((supplier) => supplier.id === 'SUP-RANGE');
     expect(range).toMatchObject({
-      rating: null,
+      satisfactionScore: null,
       canMailOrder: false,
-      zipRanges: [{ start: 2100, end: 2140 }],
+      serviceZipRanges: [{ start: 2100, end: 2140 }],
     });
   });
 
@@ -48,7 +48,7 @@ describe('loadCatalog', () => {
     const catalog = getCatalog();
 
     expect(catalog.suppliers).toHaveLength(1);
-    expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', rating: 5 });
+    expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', satisfactionScore: 5 });
   });
 
   // BUS_RULE-002, OPEN-007

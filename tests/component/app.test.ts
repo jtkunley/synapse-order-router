@@ -25,9 +25,9 @@ describe('createApp', () => {
   const catalog = makeCatalog({ 'WC-1': 'wheelchair' }, [
     makeSupplier({
       id: 'SUP-1',
-      categories: new Set(['wheelchair']),
-      zipRanges: [{ start: 10001, end: 10001 }],
-      rating: 8,
+      supportedCategories: new Set(['wheelchair']),
+      serviceZipRanges: [{ start: 10001, end: 10001 }],
+      satisfactionScore: 8,
     }),
   ]);
 
