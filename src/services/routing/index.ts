@@ -4,7 +4,7 @@ import type { RoutingResponse } from '../../models/routing.js';
 import { buildCategoryBits } from './build-category-bits.js';
 import { buildRouting } from './build-routing.js';
 import { findEligibleCandidates } from './find-eligible-candidates.js';
-import { normalizeItems } from './normalize-items.js';
+import { normalizeOrderItems } from './normalize-order-items.js';
 import { selectSuppliers } from './select-suppliers.js';
 import { uncoverableErrors } from './uncoverable-errors.js';
 
@@ -16,7 +16,7 @@ import { uncoverableErrors } from './uncoverable-errors.js';
  * with errors; successes assign every requested quantity (BUS_RULE-027).
  */
 export function routeOrder(order: Order): RoutingResponse {
-  const { items, errors } = normalizeItems(order);
+  const { items, errors } = normalizeOrderItems(order);
   if (errors.length) return getFailureResponse(errors);
 
   const { categoryBits, fullMask } = buildCategoryBits(items);

@@ -7,7 +7,7 @@ import type { OrderItem } from './types.js';
  * Resolve catalog categories and combine duplicate product lines (OPEN-006).
  * Unknown codes and unsafe total quantities become errors (OPEN-007).
  */
-export function normalizeItems(order: Order): { items: OrderItem[]; errors: string[] } {
+export function normalizeOrderItems(order: Order): { items: OrderItem[]; errors: string[] } {
   const { products } = getCatalog();
 
   // Step 1: combine repeated product lines into one total quantity per product code.
