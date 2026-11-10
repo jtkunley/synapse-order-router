@@ -9,22 +9,35 @@ import type { OrderItem } from './types.js';
  */
 export function normalizeItems(order: Order): { items: OrderItem[]; errors: string[] } {
   const { products } = getCatalog();
+
+  // Step 1: combine repeated product lines into one total quantity per product code.
   const quantities = new Map<string, number>();
   for (const item of order.items) {
-    quantities.set(item.product_code, (quantities.get(item.product_code) ?? 0) + item.quantity);
+    const total = (quantities.get(item.product_code) ?? 0) + item.quantity;
+    quantities.set(item.product_code, total);
   }
 
-  const errors: string[] = [];
+  // Step 2: sort by product code so items and errors come out in a stable order (OPEN-005).
+  const sorted = [...quantities].sort(([left], [right]) => compareText(left, right));
+
   const items: OrderItem[] = [];
-  for (const [product_code, quantity] of [...quantities].sort(([left], [right]) =>
-    compareText(left, right),
-  )) {
+  const errors: string[] = [];
+  for (const [product_code, quantity] of sorted) {
+    // Step 3: look up the product's category; unknown codes cannot be routed.
     const category = products.get(product_code)?.category;
-    if (category === undefined) errors.push(`Unknown product code: ${product_code}.`);
+    if (category === undefined) {
+      errors.push(`Unknown product code: ${product_code}.`);
+    }
+
+    // Step 4: reject totals that are no longer exact integers after combining lines.
     if (!Number.isSafeInteger(quantity)) {
       errors.push(`Total quantity for ${product_code} is too large.`);
     }
-    if (category !== undefined) items.push({ product_code, quantity, category });
+
+    // Step 5: keep known products; any error above still fails the whole order.
+    if (category !== undefined) {
+      items.push({ product_code, quantity, category });
+    }
   }
 
   return { items, errors };
