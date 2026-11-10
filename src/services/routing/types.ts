@@ -7,8 +7,13 @@ export const SIMILAR_RATING_DIFFERENCE = 0.5;
 export const SCORE_TOLERANCE = 1e-9;
 
 export type Routing = RoutingSuccess['routing'];
-export type RoutedItem = Routing[number]['items'][number];
-export type OrderItem = Omit<RoutedItem, 'fulfillment_mode'>;
+
+/** One combined order line with its catalog category. */
+export interface OrderItem {
+  product_code: string;
+  quantity: number;
+  category: string;
+}
 
 /** Eligible supplier for this order. */
 export interface Candidate {
