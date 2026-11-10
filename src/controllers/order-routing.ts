@@ -9,6 +9,8 @@ import { routeOrder } from '../services/routing/index.js';
 export const orderRoutingPath = '/api/route';
 
 export function handleOrderRouting(request: Request, response: Response): void {
+  // Validate the request body. safeParse returns every issue instead of throwing, so all
+  // validation errors are reported together as a feasible: false response (BUS_RULE-024…026).
   const order = orderSchema.safeParse(request.body);
   if (!order.success) {
     const failure: RoutingFailure = {
