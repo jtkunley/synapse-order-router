@@ -69,7 +69,7 @@ src/config/            getEnv() — sole process.env reader
 src/controllers/       One file per HTTP endpoint
 src/middleware/        Request/response middleware
 src/models/            Zod schemas and inferred types
-src/services/catalog/  CSV catalog load (index exports loadCatalog)
+src/services/catalog/  CSV catalog load (index exports loadCatalog, getCatalog)
 src/services/routing/  Order routing (index exports routeOrder)
 src/runtime/           Fatal errors, graceful shutdown
 data/                  Assessment CSV/JSON inputs
