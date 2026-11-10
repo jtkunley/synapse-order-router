@@ -9,10 +9,10 @@ import { EPSILON, SIMILAR_RATING_DIFFERENCE, type Candidate, type Plan } from '.
  */
 export function selectSuppliers(
   candidates: Candidate[],
+  categoryBits: ReadonlyMap<string, bigint>,
   fullMask: bigint,
-  bits: bigint[],
 ): Candidate[] {
-  const byCategory = bits
+  const byCategory = [...categoryBits.values()]
     .map((bit) => ({
       bit,
       options: candidates.filter((candidate) => (candidate.mask & bit) !== 0n),
