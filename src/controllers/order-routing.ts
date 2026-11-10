@@ -12,6 +12,8 @@ export function handleOrderRouting(request: Request, response: Response): void {
   // Validate the request body. safeParse returns every issue instead of throwing, so all
   // validation errors are reported together as a feasible: false response (BUS_RULE-024…026).
   const order = orderSchema.safeParse(request.body);
+
+  // validation failed, return a failure response
   if (!order.success) {
     const failure: RoutingFailure = {
       feasible: false,
@@ -22,5 +24,7 @@ export function handleOrderRouting(request: Request, response: Response): void {
     response.status(200).json(failure);
     return;
   }
+
+  // validation successful, route the order and return the response
   response.status(200).json(responseSchema.parse(routeOrder(order.data, getCatalog())));
 }
