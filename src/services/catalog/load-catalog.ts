@@ -6,6 +6,8 @@ import type { Supplier } from '../../models/supplier.js';
 import { readRows } from './read-rows.js';
 import { productSchema, supplierSchema } from './schemas.js';
 
+type WarnOutput = Pick<Console, 'warn'>;
+
 /**
  * Load `products.csv` and `suppliers.csv` from a directory (BUS_RULE-002…007).
  * Malformed data fails fast at boot; repeated product codes and supplier IDs keep
@@ -13,14 +15,21 @@ import { productSchema, supplierSchema } from './schemas.js';
  */
 export async function loadCatalog(
   directory: string,
-  output: Pick<Console, 'warn'> = console,
+  output: WarnOutput = console,
 ): Promise<Catalog> {
   const [productCsv, supplierCsv] = await Promise.all([
     readFile(join(directory, 'products.csv'), 'utf8'),
     readFile(join(directory, 'suppliers.csv'), 'utf8'),
   ]);
+  return {
+    products: loadProducts(productCsv, output),
+    suppliers: loadSuppliers(supplierCsv, output),
+  };
+}
+
+function loadProducts(csv: string, output: WarnOutput): Map<string, Product> {
   const products = new Map<string, Product>();
-  for (const product of readRows(productCsv, 'products.csv', productSchema)) {
+  for (const product of readRows(csv, 'products.csv', productSchema)) {
     if (products.has(product.code)) {
       output.warn(
         `products.csv: duplicate product code ${product.code} (category ${product.category} ignored); using first entry.`,
@@ -29,9 +38,13 @@ export async function loadCatalog(
     }
     products.set(product.code, product);
   }
+  return products;
+}
+
+function loadSuppliers(csv: string, output: WarnOutput): Supplier[] {
   const suppliers: Supplier[] = [];
   const supplierIds = new Set<string>();
-  for (const supplier of readRows(supplierCsv, 'suppliers.csv', supplierSchema)) {
+  for (const supplier of readRows(csv, 'suppliers.csv', supplierSchema)) {
     if (supplierIds.has(supplier.id)) {
       output.warn(
         `suppliers.csv: duplicate supplier ID ${supplier.id} (name ${supplier.name} ignored); using first entry.`,
@@ -41,5 +54,5 @@ export async function loadCatalog(
     supplierIds.add(supplier.id);
     suppliers.push(supplier);
   }
-  return { products, suppliers };
+  return suppliers;
 }
