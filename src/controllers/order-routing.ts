@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
 import { orderSchema } from '../models/order.js';
-import { responseSchema } from '../models/routing.js';
-import type { RoutingFailure } from '../models/routing.js';
+import { getFailure, responseSchema } from '../models/routing.js';
 import { routeOrder } from '../services/routing/index.js';
 
 /** Order-routing endpoint (BUS_RULE-021…027). Always HTTP 200; outcome is `feasible`. */
@@ -14,13 +13,10 @@ export function handleOrderRouting(request: Request, response: Response): void {
 
   // validation failed, return a failure response
   if (!order.success) {
-    const failure: RoutingFailure = {
-      feasible: false,
-      errors: order.error.issues.map(
-        (issue) => `${issue.path.join('.') || 'order'}: ${issue.message}`,
-      ),
-    };
-    response.status(200).json(failure);
+    const errors = order.error.issues.map(
+      (issue) => `${issue.path.join('.') || 'order'}: ${issue.message}`,
+    );
+    response.status(200).json(getFailure(errors));
     return;
   }
 

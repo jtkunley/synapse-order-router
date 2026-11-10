@@ -1,4 +1,5 @@
 import type { Order } from '../../models/order.js';
+import { getFailure } from '../../models/routing.js';
 import type { RoutingResponse } from '../../models/routing.js';
 import { buildCategoryBits } from './build-category-bits.js';
 import { buildRouting } from './build-routing.js';
@@ -16,12 +17,12 @@ import { uncoverableErrors } from './uncoverable-errors.js';
  */
 export function routeOrder(order: Order): RoutingResponse {
   const { items, errors } = normalizeItems(order);
-  if (errors.length) return { feasible: false, errors };
+  if (errors.length) return getFailure(errors);
 
   const { categoryBits, fullMask } = buildCategoryBits(items);
   const candidates = findEligibleCandidates(order, categoryBits);
   const uncovered = uncoverableErrors(order, items, candidates, categoryBits, fullMask);
-  if (uncovered) return { feasible: false, errors: uncovered };
+  if (uncovered) return getFailure(uncovered);
 
   const selected = selectSuppliers(candidates, fullMask, [...categoryBits.values()]);
   return { feasible: true, routing: buildRouting(items, selected) };
