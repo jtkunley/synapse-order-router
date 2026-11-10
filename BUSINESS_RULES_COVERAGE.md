@@ -32,6 +32,7 @@ Supplier eligibility uses supplier id/name, service ZIPs, categories, customer s
 | ------------------------------------- | -------------------------------------------------------------------------- |
 | `component/controllers/route.test.ts` | routes the assessment sample orders through the real catalog               |
 | `unit/services/catalog.test.ts`       | parses ZIP lists, ranges, ratings, and the misspelled supplier_name header |
+| `unit/services/catalog.test.ts`       | keeps the first supplier row and warns once per skipped duplicate          |
 
 ### `BUS_RULE-004`
 
@@ -343,9 +344,9 @@ Validation and data quality: exact field constraints and treatment of unknown pr
 | Test file                             | Test case                                                             |
 | ------------------------------------- | --------------------------------------------------------------------- |
 | `component/controllers/route.test.ts` | returns HTTP 200 when products are unknown or the order is infeasible |
-| `unit/services/catalog.test.ts`       | rejects duplicate supplier IDs                                        |
+| `unit/services/catalog.test.ts`       | keeps the first supplier row and warns once per skipped duplicate     |
 | `unit/services/catalog.test.ts`       | keeps the first product row and warns once per skipped duplicate      |
-| `unit/services/catalog.test.ts`       | does not warn when product codes are unique                           |
+| `unit/services/catalog.test.ts`       | does not warn when product codes and supplier IDs are unique          |
 | `unit/services/catalog.test.ts`       | rejects empty CSV files                                               |
 | `unit/services/catalog.test.ts`       | rejects inverted ZIP ranges with a record-level error                 |
 | `unit/services/catalog.test.ts`       | rejects duplicate column headers                                      |
