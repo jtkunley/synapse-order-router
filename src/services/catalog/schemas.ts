@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Product } from '../../models/product.js';
 import type { Supplier } from '../../models/supplier.js';
 
 /** Zod parsers for the assessment CSV column shapes (BUS_RULE-004…007, BUS_RULE-008). */
@@ -33,7 +34,9 @@ const rating = text.toLowerCase().pipe(
   ]),
 );
 
-export const productSchema = z.object({ product_code: text, category });
+export const productSchema: z.ZodType<Product> = z
+  .object({ product_code: text, category })
+  .transform((row) => ({ code: row.product_code, category: row.category }));
 
 export const supplierSchema: z.ZodType<Supplier> = z
   .object({

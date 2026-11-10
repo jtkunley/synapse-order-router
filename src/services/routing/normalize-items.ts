@@ -21,7 +21,7 @@ export function normalizeItems(
   for (const [product_code, quantity] of [...quantities].sort(([left], [right]) =>
     compareText(left, right),
   )) {
-    const category = catalog.products.get(product_code);
+    const category = catalog.products.get(product_code)?.category;
     if (category === undefined) errors.push(`Unknown product code: ${product_code}.`);
     if (!Number.isSafeInteger(quantity)) {
       errors.push(`Total quantity for ${product_code} is too large.`);

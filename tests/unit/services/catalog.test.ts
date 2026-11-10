@@ -10,8 +10,8 @@ describe('loadCatalog', () => {
   it('parses ZIP lists, ranges, ratings, and the misspelled supplier_name header', async () => {
     const catalog = await loadCatalog(join(fixtures, 'catalog-basic'));
 
-    expect(catalog.products.get('WC-1')).toBe('wheelchair');
-    expect(catalog.products.get('OX-1')).toBe('oxygen');
+    expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });
+    expect(catalog.products.get('OX-1')).toEqual({ code: 'OX-1', category: 'oxygen' });
     expect(catalog.suppliers).toHaveLength(3);
 
     const local = catalog.suppliers.find((supplier) => supplier.id === 'SUP-LOCAL');

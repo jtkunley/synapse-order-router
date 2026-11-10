@@ -18,7 +18,12 @@ export function makeCatalog(
   products: Record<string, string>,
   suppliers: readonly Supplier[],
 ): Catalog {
-  return { products: new Map(Object.entries(products)), suppliers };
+  return {
+    products: new Map(
+      Object.entries(products).map(([code, category]) => [code, { code, category }]),
+    ),
+    suppliers,
+  };
 }
 
 export function makeOrder(overrides: Partial<Order> & Pick<Order, 'items'>): Order {

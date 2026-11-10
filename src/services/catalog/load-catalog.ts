@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Catalog } from '../../models/catalog.js';
+import type { Product } from '../../models/product.js';
 import { readRows } from './read-rows.js';
 import { productSchema, supplierSchema } from './schemas.js';
 
@@ -13,14 +14,14 @@ export async function loadCatalog(directory: string): Promise<Catalog> {
     readFile(join(directory, 'products.csv'), 'utf8'),
     readFile(join(directory, 'suppliers.csv'), 'utf8'),
   ]);
-  const products = new Map<string, string>();
+  const products = new Map<string, Product>();
   for (const product of readRows(productCsv, 'products.csv', productSchema)) {
-    const existing = products.get(product.product_code);
-    if (existing !== undefined && existing !== product.category) {
-      throw new Error(`products.csv: conflicting categories for ${product.product_code}.`);
+    const existing = products.get(product.code);
+    if (existing !== undefined && existing.category !== product.category) {
+      throw new Error(`products.csv: conflicting categories for ${product.code}.`);
     }
     // Identical product records occur in the supplied data; they are one catalog entry.
-    products.set(product.product_code, product.category);
+    products.set(product.code, product);
   }
   const suppliers = readRows(supplierCsv, 'suppliers.csv', supplierSchema);
   const supplierIds = new Set<string>();
