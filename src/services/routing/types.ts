@@ -3,7 +3,8 @@ import type { Supplier } from '../../models/supplier.js';
 
 /** Max total-score gap (per selected supplier) that still counts as “similar” (OPEN-004). */
 export const SIMILAR_RATING_DIFFERENCE = 0.5;
-export const EPSILON = 1e-9;
+/** Score differences this small are floating-point noise and count as equal. */
+export const SCORE_TOLERANCE = 1e-9;
 
 export type Routing = RoutingSuccess['routing'];
 export type RoutedItem = Routing[number]['items'][number];
@@ -23,5 +24,6 @@ export interface Plan {
   candidates: Candidate[];
   score: number;
   mailCount: number;
-  ids: string;
+  /** Sorted supplier ids, used for deterministic tie-breaks (OPEN-005). */
+  supplierIds: string;
 }
