@@ -165,6 +165,7 @@ Quality: among otherwise suitable options, prefer higher customer satisfaction s
 
 | Test file                                     | Test case                                                                     |
 | --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `unit/services/routing.test.ts`               | prefers the higher total rating among equally small multi-supplier covers     |
 | `component/controllers/order-routing.test.ts` | prefers higher satisfaction among single-supplier options                     |
 | `component/controllers/order-routing.test.ts` | prefers local fulfillment when ratings are similar, otherwise quality         |
 | `unit/services/routing.test.ts`               | prefers higher satisfaction among otherwise equal single-supplier options     |
@@ -307,9 +308,10 @@ Shipment counting: whether each selected supplier counts as one shipment.
 
 Ratings: how to compare unrated suppliers and combine ratings for split orders.
 
-| Test file                       | Test case                                                                |
-| ------------------------------- | ------------------------------------------------------------------------ |
-| `unit/services/routing.test.ts` | treats unrated suppliers as score 0 and breaks equal ties by supplier id |
+| Test file                       | Test case                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| `unit/services/routing.test.ts` | prefers the higher total rating among equally small multi-supplier covers |
+| `unit/services/routing.test.ts` | treats unrated suppliers as score 0 and breaks equal ties by supplier id  |
 
 ### `OPEN-004`
 

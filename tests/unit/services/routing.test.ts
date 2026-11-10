@@ -263,6 +263,30 @@ describe('routeOrder', () => {
     ).toEqual(['OX-1', 'WC-1']);
   });
 
+  // BUS_RULE-017, OPEN-003
+  it('prefers the higher total rating among equally small multi-supplier covers', () => {
+    const catalog = makeCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen', 'CP-1': 'cpap' }, [
+      makeSupplier({ id: 'SUP-WC-OX', categories: new Set(['wheelchair', 'oxygen']), rating: 5 }),
+      makeSupplier({ id: 'SUP-CP', categories: new Set(['cpap']), rating: 5 }),
+      makeSupplier({ id: 'SUP-WC-CP', categories: new Set(['wheelchair', 'cpap']), rating: 9 }),
+      makeSupplier({ id: 'SUP-OX', categories: new Set(['oxygen']), rating: 9 }),
+    ]);
+    setCatalog(catalog);
+
+    const routed = routeOrder(
+      makeOrder({
+        items: [
+          { product_code: 'WC-1', quantity: 1 },
+          { product_code: 'OX-1', quantity: 1 },
+          { product_code: 'CP-1', quantity: 1 },
+        ],
+      }),
+    );
+    expect(routed.feasible).toBe(true);
+    if (!routed.feasible) return;
+    expect(routed.routing.map((group) => group.supplier_id)).toEqual(['SUP-OX', 'SUP-WC-CP']);
+  });
+
   // BUS_RULE-008
   it('matches leading-zero customer ZIPs against numeric supplier coverage', () => {
     const catalog = makeCatalog({ 'CP-1': 'cpap' }, [
