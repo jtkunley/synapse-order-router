@@ -1,6 +1,5 @@
-import type { Express } from 'express';
+import type { Request, Response } from 'express';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
-import { jsonBody } from '../middleware/json-body.js';
 import { orderSchema } from '../models/order.js';
 import { responseSchema } from '../models/routing.js';
 import type { RoutingFailure } from '../models/routing.js';
@@ -28,20 +27,17 @@ export const routePaths: ZodOpenApiPathsObject = {
   },
 };
 
-export function addRoute(app: Express): void {
-  app.use(routePath, jsonBody);
-  app.post(routePath, (request, response) => {
-    const order = orderSchema.safeParse(request.body);
-    if (!order.success) {
-      const failure: RoutingFailure = {
-        feasible: false,
-        errors: order.error.issues.map(
-          (issue) => `${issue.path.join('.') || 'order'}: ${issue.message}`,
-        ),
-      };
-      response.status(200).json(failure);
-      return;
-    }
-    response.status(200).json(responseSchema.parse(routeOrder(order.data, getCatalog())));
-  });
+export function handleRoute(request: Request, response: Response): void {
+  const order = orderSchema.safeParse(request.body);
+  if (!order.success) {
+    const failure: RoutingFailure = {
+      feasible: false,
+      errors: order.error.issues.map(
+        (issue) => `${issue.path.join('.') || 'order'}: ${issue.message}`,
+      ),
+    };
+    response.status(200).json(failure);
+    return;
+  }
+  response.status(200).json(responseSchema.parse(routeOrder(order.data, getCatalog())));
 }

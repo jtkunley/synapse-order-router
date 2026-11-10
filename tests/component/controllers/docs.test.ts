@@ -1,13 +1,14 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { addDocs, docsPath } from '../../../src/controllers/docs.js';
+import { docsPath } from '../../../src/controllers/docs.js';
 import { openApiPath } from '../../../src/controllers/openapi.js';
+import { addRoutes } from '../../../src/routes.js';
 
 describe('GET /docs', () => {
   it('serves an HTML OpenAPI viewer pointed at /openapi.json', async () => {
     const app = express();
-    addDocs(app);
+    addRoutes(app);
 
     const response = await request(app).get(docsPath);
     expect(response.status).toBe(200);
@@ -22,7 +23,7 @@ describe('GET /docs', () => {
     ['/docs/assets/swagger-ui-bundle.js', /javascript/],
   ])('serves the bundled Swagger UI asset at %s', async (path, contentType) => {
     const app = express();
-    addDocs(app);
+    addRoutes(app);
 
     const response = await request(app).get(path);
     expect(response.status).toBe(200);

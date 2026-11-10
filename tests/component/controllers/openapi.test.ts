@@ -1,12 +1,13 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { addOpenApi, openApiPath } from '../../../src/controllers/openapi.js';
+import { openApiPath } from '../../../src/controllers/openapi.js';
+import { addRoutes } from '../../../src/routes.js';
 
 describe('GET /openapi.json', () => {
   it('serves an OpenAPI document for the configured paths', async () => {
     const app = express();
-    addOpenApi(app);
+    addRoutes(app);
 
     const response = await request(app).get(openApiPath);
     expect(response.status).toBe(200);
