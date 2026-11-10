@@ -2,11 +2,11 @@ import type { Order } from '../../models/order.js';
 import { getFailureResponse, getSuccessResponse } from '../../models/routing.js';
 import type { RoutingResponse } from '../../models/routing.js';
 import { buildRouting } from './build-routing.js';
-import { findEligibleCandidates } from './find-eligible-candidates.js';
+import { findEligibleSuppliers } from './find-eligible-suppliers.js';
 import { findUncoverableErrors } from './find-uncoverable-errors.js';
 import { listCategories } from './list-categories.js';
 import { normalizeOrderItems } from './normalize-order-items.js';
-import { selectSuppliers } from './select-suppliers.js';
+import { selectEligibleSuppliers } from './select-eligible-suppliers.js';
 
 /**
  * Route one order against the loaded catalog. Failures use `feasible: false`
@@ -21,14 +21,14 @@ export function routeOrder(order: Order): RoutingResponse {
   const categories = listCategories(items);
 
   // 3. Keep suppliers that serve this ZIP (or can mail) and carry an ordered category.
-  const candidates = findEligibleCandidates(order, categories);
+  const eligibleSuppliers = findEligibleSuppliers(order, categories);
 
   // 4. Fail when some category has no eligible supplier at all (BUS_RULE-015).
-  const uncoverable = findUncoverableErrors(order, items, candidates);
+  const uncoverable = findUncoverableErrors(order, items, eligibleSuppliers);
   if (uncoverable.length) return getFailureResponse(uncoverable);
 
   // 5. Pick the fewest suppliers, then best quality and local preference (BUS_RULE-016…020).
-  const selected = selectSuppliers(candidates, categories);
+  const selected = selectEligibleSuppliers(eligibleSuppliers, categories);
 
   // 6. Assign every item to the selected supplier that carries its category.
   return getSuccessResponse(buildRouting(items, selected));

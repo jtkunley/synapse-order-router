@@ -1,45 +1,53 @@
 import { compareText } from './compare-text.js';
 import { planIds } from './plan-ids.js';
-import { SCORE_TOLERANCE, SIMILAR_RATING_DIFFERENCE, type Candidate, type Plan } from './types.js';
+import {
+  SCORE_TOLERANCE,
+  SIMILAR_RATING_DIFFERENCE,
+  type EligibleSupplier,
+  type Plan,
+} from './types.js';
 
 type Ranked = Pick<Plan, 'score' | 'supplierIds'>;
 
 /**
  * Choose a minimum-shipment cover, then apply quality and local preference
- * (BUS_RULE-016…019, OPEN-002…005). Search is exact within the pruned candidate set.
+ * (BUS_RULE-016…019, OPEN-002…005). Search is exact over the given eligible suppliers.
  */
-export function selectSuppliers(
-  candidates: Candidate[],
+export function selectEligibleSuppliers(
+  eligibleSuppliers: EligibleSupplier[],
   categories: readonly string[],
-): Candidate[] {
+): EligibleSupplier[] {
   // 1. Exact search: the best plan per mail-shipment count among the smallest covers.
-  const plans = findMinimumPlans(candidates, categories);
+  const plans = findMinimumPlans(eligibleSuppliers, categories);
 
   // 2. Among plans of similar quality, prefer fewer mail shipments.
   const plan = choosePlan(plans);
 
-  return [...plan.candidates].sort((left, right) =>
+  return [...plan.suppliers].sort((left, right) =>
     compareText(left.supplier.id, right.supplier.id),
   );
 }
 
 /** Depth-first search for every smallest cover, keeping the best plan per mail-shipment count. */
-function findMinimumPlans(candidates: readonly Candidate[], categories: readonly string[]): Plan[] {
+function findMinimumPlans(
+  eligibleSuppliers: readonly EligibleSupplier[],
+  categories: readonly string[],
+): Plan[] {
   // Branch on categories with the fewest options first; it keeps the search tree narrow.
   const optionsByCategory = categories
     .map((category) => ({
       category,
-      options: candidates.filter((candidate) => candidate.covers.has(category)),
+      options: eligibleSuppliers.filter((eligible) => eligible.covers.has(category)),
     }))
     .sort((left, right) => left.options.length - right.options.length);
-  const widestCoverage = Math.max(...candidates.map((candidate) => candidate.covers.size));
+  const widestCoverage = Math.max(...eligibleSuppliers.map((eligible) => eligible.covers.size));
 
   // One supplier per category always covers the order, so no plan needs more than that.
   let supplierCount = categories.length;
   const bestByMailCount = new Map<number, Plan>();
   const visited = new Map<string, Ranked>();
 
-  function recordPlan(chosen: Candidate[], score: number, mailCount: number): void {
+  function recordPlan(chosen: EligibleSupplier[], score: number, mailCount: number): void {
     // A smaller cover makes every larger plan found so far irrelevant.
     if (chosen.length < supplierCount) {
       supplierCount = chosen.length;
@@ -50,13 +58,13 @@ function findMinimumPlans(candidates: readonly Candidate[], categories: readonly
     const supplierIds = planIds(chosen);
     const previous = bestByMailCount.get(mailCount);
     if (!previous || isBetter({ score, supplierIds }, previous)) {
-      bestByMailCount.set(mailCount, { candidates: [...chosen], score, mailCount, supplierIds });
+      bestByMailCount.set(mailCount, { suppliers: [...chosen], score, mailCount, supplierIds });
     }
   }
 
   function search(
     covered: ReadonlySet<string>,
-    chosen: Candidate[],
+    chosen: EligibleSupplier[],
     score: number,
     mailCount: number,
   ): void {
@@ -81,13 +89,13 @@ function findMinimumPlans(candidates: readonly Candidate[], categories: readonly
 
     // Branch on the first uncovered category: every cover includes one of its options.
     const next = optionsByCategory.find(({ category }) => !covered.has(category))!;
-    for (const candidate of next.options) {
-      chosen.push(candidate);
+    for (const eligible of next.options) {
+      chosen.push(eligible);
       search(
-        new Set([...covered, ...candidate.covers]),
+        new Set([...covered, ...eligible.covers]),
         chosen,
-        score + candidate.score,
-        mailCount + (candidate.local ? 0 : 1),
+        score + eligible.score,
+        mailCount + (eligible.local ? 0 : 1),
       );
       chosen.pop();
     }
@@ -100,7 +108,7 @@ function findMinimumPlans(candidates: readonly Candidate[], categories: readonly
 /** Similar-quality plans compete on fewer mail shipments (OPEN-004, OPEN-005). */
 function choosePlan(plans: Plan[]): Plan {
   // Every plan has the same (minimum) number of suppliers.
-  const supplierCount = plans[0]!.candidates.length;
+  const supplierCount = plans[0]!.suppliers.length;
 
   // Plans within the allowance of the best total score count as similar.
   const highestScore = Math.max(...plans.map((plan) => plan.score));

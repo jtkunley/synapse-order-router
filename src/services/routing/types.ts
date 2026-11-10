@@ -16,7 +16,7 @@ export interface OrderItem {
 }
 
 /** Eligible supplier for this order. */
-export interface Candidate {
+export interface EligibleSupplier {
   supplier: Supplier;
   /** Ordered categories this supplier carries. */
   covers: ReadonlySet<string>;
@@ -26,7 +26,7 @@ export interface Candidate {
 }
 
 export interface Plan {
-  candidates: Candidate[];
+  suppliers: EligibleSupplier[];
   score: number;
   mailCount: number;
   /** Sorted supplier ids, used for deterministic tie-breaks (OPEN-005). */

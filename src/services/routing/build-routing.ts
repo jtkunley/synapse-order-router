@@ -1,10 +1,13 @@
-import type { Candidate, OrderItem, Routing } from './types.js';
+import type { EligibleSupplier, OrderItem, Routing } from './types.js';
 
 /**
  * Assign each normalized item to one selected supplier and set fulfillment_mode
  * (BUS_RULE-023, OPEN-006, OPEN-008). Local ZIP coverage wins over mail labeling.
  */
-export function buildRouting(items: readonly OrderItem[], selected: readonly Candidate[]): Routing {
+export function buildRouting(
+  items: readonly OrderItem[],
+  selected: readonly EligibleSupplier[],
+): Routing {
   // 1. One routing group per selected supplier, in selection order.
   const routing: Routing = selected.map(({ supplier }) => ({
     supplier_id: supplier.id,
