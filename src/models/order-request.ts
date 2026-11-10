@@ -3,7 +3,7 @@ import type { Order } from './order.js';
 
 export const quantitySchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 
-/** `POST /api/route` request body (BR-001, BR-025, BRX-010). */
+/** `POST /api/route` request body (BR-001, BR-025, BRX-010, BRX-016, BRX-019). */
 export const orderRequestSchema = z.object({
   order_id: z.string().trim().min(1),
   customer_zip: z

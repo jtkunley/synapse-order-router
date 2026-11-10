@@ -28,7 +28,7 @@ export function readRows<T>(content: string, filename: string, schema: z.ZodType
   });
 }
 
-/** Trim headers, fix the known misspelling, and reject repeated column names. */
+/** Trim headers, fix the known misspelling, and reject repeated column names (BRX-016, BRX-017). */
 function normalizeHeaders(headers: string[], filename: string): string[] {
   const names = headers.map((header) => {
     const name = header.trim();

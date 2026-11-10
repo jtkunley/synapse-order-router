@@ -4,7 +4,7 @@ import { compareText } from './compare-text.js';
 
 /**
  * Combine repeated line items (BRX-006) and look up each product category (BR-010).
- * Unknown products become errors (BRX-013); unsafe total quantities are a technical guard.
+ * Unknown products become errors (BRX-013); totals must stay exact integers (BRX-019).
  */
 export function combineAndCategorizeLineItems(order: Order): {
   lineItems: CategorizedLineItem[];
@@ -31,7 +31,7 @@ export function combineAndCategorizeLineItems(order: Order): {
       errors.push(`Unknown product code: ${productCode}.`);
     }
 
-    // 4. Reject totals that are no longer exact integers after combining.
+    // 4. Reject totals that are no longer exact integers after combining (BRX-019).
     if (!Number.isSafeInteger(quantity)) {
       errors.push(`Total quantity for ${productCode} is too large.`);
     }
