@@ -63,8 +63,8 @@ Assessment catalog inputs live in `data/` (`products.csv`, `suppliers.csv`,
 ## Layout
 
 ```text
-src/main.ts            Process entry; loads config/catalog and starts the server
-src/app.ts             Express wiring (mount controllers, error handler)
+src/main.ts            Process entry; loads config and starts the server
+src/app.ts             Catalog load + Express wiring (mount controllers, error handler)
 src/config/            getEnv() — sole process.env reader
 src/controllers/       One file per HTTP endpoint
 src/middleware/        Request/response middleware

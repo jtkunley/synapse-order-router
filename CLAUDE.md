@@ -6,8 +6,8 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 
 | Path               | Responsibility                                                              |
 | ------------------ | --------------------------------------------------------------------------- |
-| `src/main.ts`      | Process entrypoint; loads config and catalog, listens, wires runtime        |
-| `src/app.ts`       | Express app wiring (middleware order, controllers)                          |
+| `src/main.ts`      | Process entrypoint; loads config, builds the app, listens, wires runtime    |
+| `src/app.ts`       | Loads the catalog; Express app wiring (middleware order, controllers)       |
 | `src/config/`      | `getEnv()` — sole reader of `process.env`                                   |
 | `src/controllers/` | One file per HTTP endpoint (`/api/route`, `/openapi.json`, `/docs`)         |
 | `src/middleware/`  | Express request/response middleware                                         |
