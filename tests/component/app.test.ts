@@ -31,7 +31,7 @@ describe('createApp', () => {
     }),
   ]);
 
-  // BUS_RULE-021, BUS_RULE-022
+  // BR-021, BR-022
   it('disables x-powered-by and serves openapi, docs, and routing', async () => {
     vi.stubEnv('DATA_DIR', '/data');
     setCatalog(catalog);
@@ -53,7 +53,7 @@ describe('createApp', () => {
     expect(routed.body.feasible).toBe(true);
   });
 
-  // BUS_RULE-022, BUS_RULE-024
+  // BR-022, BR-024
   it('returns HTTP 200 for invalid JSON bodies', async () => {
     setCatalog(catalog);
     const response = await request(await createApp())
@@ -67,8 +67,8 @@ describe('createApp', () => {
     });
   });
 
-  // OPEN-007
-  it('rejects when the catalog fails to load', async () => {
+  // BRX-011
+  it('fails to start when the catalog cannot be loaded', async () => {
     const failure = new Error('products.csv: no data records.');
     vi.mocked(loadCatalog).mockRejectedValueOnce(failure);
 

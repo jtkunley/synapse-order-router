@@ -28,8 +28,8 @@ describe('POST /api/route', () => {
     vi.unstubAllEnvs();
   });
 
-  // BUS_RULE-001, BUS_RULE-009, BUS_RULE-010, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, OPEN-008
-  it('returns HTTP 200 with the success routing shape', async () => {
+  // BR-001, BR-009, BR-010, BR-021, BR-022, BR-023, BRX-014
+  it('returns HTTP 200 with the feasible routing shape', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-1',
@@ -71,7 +71,7 @@ describe('POST /api/route', () => {
     });
   });
 
-  // BUS_RULE-022, BUS_RULE-024, BUS_RULE-025, BUS_RULE-026
+  // BR-022, BR-024, BR-025, BR-026, BRX-010
   it('returns HTTP 200 with multiple validation errors for invalid orders', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -93,7 +93,7 @@ describe('POST /api/route', () => {
     expect(response.body.errors.length).toBeGreaterThan(1);
   });
 
-  // BUS_RULE-010, BUS_RULE-012, BUS_RULE-015, BUS_RULE-022, BUS_RULE-024, OPEN-007
+  // BR-012, BR-015, BR-022, BR-024, BRX-009, BRX-013
   it('returns HTTP 200 when products are unknown or the order is infeasible', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -132,8 +132,8 @@ describe('POST /api/route', () => {
     expect(infeasible.body.errors[0]).toMatch(/mail order disallowed/);
   });
 
-  // BUS_RULE-012, BUS_RULE-015, OPEN-008
-  it('uses only ZIP-local suppliers when mail_order is false', async () => {
+  // BR-012, BR-015, BRX-014
+  it('uses only suppliers serving the customer ZIP when mail_order is false', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-MAIL',
@@ -166,8 +166,8 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].items[0].fulfillment_mode).toBe('local');
   });
 
-  // BUS_RULE-011, BUS_RULE-013, BUS_RULE-014, OPEN-008
-  it('allows mail-capable suppliers regardless of ZIP when mail_order is true, but still requires category', async () => {
+  // BR-011, BR-013, BR-014, BRX-014
+  it('allows mail-order-capable suppliers regardless of ZIP when mail_order is true, but still requires the product category', async () => {
     const mailWheelchairOnly = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-MAIL-WC',
@@ -206,8 +206,8 @@ describe('POST /api/route', () => {
     expect(wrongCategory.body.errors[0]).toMatch(/No eligible supplier for OX-1/);
   });
 
-  // OPEN-001, BUS_RULE-018, OPEN-008
-  it('keeps local non-mail suppliers eligible when mail_order is true', async () => {
+  // BRX-001, BR-018, BRX-005
+  it('keeps suppliers serving the customer ZIP eligible without mail-order capability', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOCAL',
@@ -239,8 +239,8 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].items[0].fulfillment_mode).toBe('local');
   });
 
-  // BUS_RULE-016, BUS_RULE-019, OPEN-002
-  it('prefers consolidation over a higher total rating with more shipments', async () => {
+  // BR-016, BR-019, BRX-002
+  it('prefers one shipment over more shipments with higher satisfaction scores', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-BOTH',
@@ -280,7 +280,7 @@ describe('POST /api/route', () => {
     ).toEqual(['SUP-BOTH']);
   });
 
-  // BUS_RULE-017
+  // BR-017
   it('prefers higher satisfaction among single-supplier options', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
@@ -310,8 +310,8 @@ describe('POST /api/route', () => {
     expect(response.body.routing[0].supplier_id).toBe('SUP-HIGH');
   });
 
-  // BUS_RULE-017, BUS_RULE-018, OPEN-004, OPEN-008
-  it('prefers local fulfillment when ratings are similar, otherwise quality', async () => {
+  // BR-017, BR-018, BR-019, BRX-004, BRX-005
+  it('prefers local fulfillment when satisfaction scores are similar, otherwise the higher score', async () => {
     const products = { 'WC-1': 'wheelchair' };
     const local = makeSupplier({
       id: 'SUP-LOCAL',
@@ -343,7 +343,7 @@ describe('POST /api/route', () => {
     expect(similar.status).toBe(200);
     expect(similar.body.routing[0].supplier_id).toBe('SUP-LOCAL');
 
-    const quality = await request(
+    const higherScore = await request(
       await appWithCatalog(products, [
         local,
         makeSupplier({
@@ -362,13 +362,13 @@ describe('POST /api/route', () => {
         mail_order: true,
         items: [{ product_code: 'WC-1', quantity: 1 }],
       });
-    expect(quality.status).toBe(200);
-    expect(quality.body.routing[0].supplier_id).toBe('SUP-MAIL-BETTER');
-    expect(quality.body.routing[0].items[0].fulfillment_mode).toBe('mail_order');
+    expect(higherScore.status).toBe(200);
+    expect(higherScore.body.routing[0].supplier_id).toBe('SUP-MAIL-BETTER');
+    expect(higherScore.body.routing[0].items[0].fulfillment_mode).toBe('mail_order');
   });
 
-  // BUS_RULE-011, BUS_RULE-020, BUS_RULE-027
-  it('splits across suppliers when no single supplier covers every category', async () => {
+  // BR-011, BR-020, BR-027
+  it('splits across suppliers when no single supplier supports every product category', async () => {
     const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-WC',
@@ -409,7 +409,7 @@ describe('POST /api/route', () => {
     expect(quantities).toEqual({ 'WC-1': 1, 'OX-1': 1 });
   });
 
-  // BUS_RULE-008, BUS_RULE-027, OPEN-006
+  // BR-008, BR-027, BRX-006, BRX-007
   it('combines duplicate line items and preserves leading-zero ZIPs', async () => {
     const app = await appWithCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
@@ -444,7 +444,7 @@ describe('POST /api/route', () => {
     ]);
   });
 
-  // BUS_RULE-002, BUS_RULE-003, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, BUS_RULE-027, OPEN-008
+  // BR-002, BR-003, BR-021, BR-022, BR-023, BR-027, BRX-014, BRX-017
   it('routes the assessment sample orders through the real catalog', async () => {
     const dataDir = join(dirname(fileURLToPath(import.meta.url)), '../../../data');
     const samples = JSON.parse(await readFile(join(dataDir, 'sample_orders.json'), 'utf8')) as {
