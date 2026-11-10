@@ -7,9 +7,10 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 | Path               | Responsibility                                                              |
 | ------------------ | --------------------------------------------------------------------------- |
 | `src/main.ts`      | Process entrypoint; loads config, builds the app, listens, wires runtime    |
-| `src/app.ts`       | Loads the catalog; Express app wiring (middleware order, controllers)       |
+| `src/app.ts`       | Loads the catalog; Express app wiring (routes, then error handler)          |
+| `src/routes.ts`    | Registers every endpoint: path, per-route middleware, handler               |
 | `src/config/`      | `getEnv()` — sole reader of `process.env`                                   |
-| `src/controllers/` | One file per HTTP endpoint (`/api/route`, `/openapi.json`, `/docs`)         |
+| `src/controllers/` | One file per endpoint: path, handler(s), OpenAPI spec; no registration      |
 | `src/middleware/`  | Express request/response middleware                                         |
 | `src/models/`      | Domain schemas/types (Zod + inferred types)                                 |
 | `src/services/`    | Business logic (`catalog/`, `routing/`; each folder exports via `index.ts`) |
@@ -22,7 +23,7 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 - Keep HTTP in controllers; keep routing/catalog logic in services.
 - One concern per file when practical (endpoint, middleware, model).
 - Use the built-in console for lightweight process logging in server/runtime paths.
-- Register middleware before controllers; error handler last in `app.ts`.
+- Register endpoints only in `routes.ts`; error handler last in `app.ts`.
 - Prefer exact dependency versions; match existing TypeScript/ESM style (`.js` import specifiers).
 - Do not edit `AI_PROMPTS.md`; it is maintained by hand.
 - When committing, split outstanding changes into gradual commits by concern (e.g. one service split, then controller wiring, then tests/docs)—never one catch-all commit for unrelated work.
