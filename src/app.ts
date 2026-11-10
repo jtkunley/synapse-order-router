@@ -6,8 +6,8 @@ import { addRoute } from './controllers/route.js';
 import { handleError } from './middleware/error-handler.js';
 import { loadCatalog } from './services/catalog/index.js';
 
-/** Rejects when the catalog cannot be loaded, so the server never starts without data (OPEN-007). */
 export async function createApp(): Promise<express.Express> {
+  // Throws on a missing or malformed catalog so the server never starts without data (OPEN-007).
   const catalog = await loadCatalog(getEnv().dataDir);
 
   const app = express();
