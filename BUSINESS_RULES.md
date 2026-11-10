@@ -1,89 +1,116 @@
 # Business Rules
 
-Based on the instructions and sample orders provided with the Synapse Health assessment.
+This document defines the business behavior of the Synapse Health order router. It
+restates the assessment requirements and records the auxiliary business rules needed to
+make unspecified behavior deterministic.
 
-Normative requirements use `BUS_RULE-xxx`. Tests that assert a rule cite that id
-in a comment. Policies the assessment leaves open use `OPEN-xxx` and are not
-defaulted here. Full rule→test mapping: [`BUSINESS_RULES_COVERAGE.md`](./BUSINESS_RULES_COVERAGE.md).
+The rules describe required outcomes without prescribing architecture, algorithms,
+storage, or implementation.
 
-## Purpose
+## Rule identifiers
 
-Route a multi-item order to suppliers that can fulfill it. Prefer fewer shipments,
-then better customer satisfaction, with a preference for local fulfillment when
-ratings are similar.
+| Template  | Meaning                                                                            |
+| --------- | ---------------------------------------------------------------------------------- |
+| `BR-000`  | A business rule derived directly from the assessment.                              |
+| `BRX-000` | An auxiliary business rule adopted where the assessment leaves a gap or ambiguity. |
 
-## Inputs
+Both rule types are binding for this implementation. The separate identifiers preserve
+the source of each rule. Together, they form the complete behavioral contract for
+implementation and acceptance testing.
 
-| Input                | Information used                                                                                                  |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Order                | `order_id`, `customer_zip`, `mail_order`, and items containing `product_code` and `quantity`.                     |
-| `products.csv`       | Product codes and their categories.                                                                               |
-| `suppliers.csv`      | Supplier ID and name, service ZIPs, supported categories, customer satisfaction score, and mail-order capability. |
-| `sample_orders.json` | Three example orders for exercising the router.                                                                   |
+## Domain language
 
-1. **BUS_RULE-001** — Routing uses order `order_id`, `customer_zip`, `mail_order`, and items with `product_code` and `quantity`.
-2. **BUS_RULE-002** — Product codes map to categories from the product catalog.
-3. **BUS_RULE-003** — Supplier eligibility uses supplier id/name, service ZIPs, categories, customer satisfaction score, and mail-order capability.
-4. **BUS_RULE-004** — Accept supplier ZIP lists (`10001, 10002`) and ranges (`10001-10100`).
-5. **BUS_RULE-005** — Accept comma-separated supplier categories.
-6. **BUS_RULE-006** — Accept ratings from 1 to 10 or `no ratings yet`.
-7. **BUS_RULE-007** — Accept `y`/`n` mail-order flags.
-8. **BUS_RULE-008** — Preserve ZIP codes with leading zeros (for example `02130`).
-9. **BUS_RULE-009** — Sample fields `priority` and `notes` have no routing behavior.
+| Term                   | Meaning                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Order                  | A request to route one or more line items for a customer ZIP code.                                                           |
+| Line item              | A product code and requested quantity within an order.                                                                       |
+| Product                | A catalog entry identified by a product code and assigned to a product category.                                             |
+| Product category       | A supplier capability used to determine whether a supplier can fulfill a line item.                                          |
+| Supplier               | A business with defined product capabilities, geographic service coverage, customer satisfaction, and mail-order capability. |
+| Eligible supplier      | A supplier that supports the required product category and satisfies the applicable geographic or mail-order condition.      |
+| Routing decision       | A feasible assignment of the complete order to suppliers, or an infeasible outcome with reasons.                             |
+| Local fulfillment      | Fulfillment by a supplier that serves the customer's ZIP code.                                                               |
+| Mail-order fulfillment | Fulfillment by a mail-order-capable supplier without requiring local ZIP coverage.                                           |
+| Shipment               | The portion of an order assigned to one supplier.                                                                            |
+
+## Source data and order request
+
+1. **BR-001** — An order contains `order_id`, `customer_zip`, `mail_order`, and one or more line items containing `product_code` and `quantity`.
+2. **BR-002** — The product catalog maps each product code to its product category.
+3. **BR-003** — The supplier catalog provides supplier ID, supplier name, service ZIPs, supported product categories, customer satisfaction score, and mail-order capability.
+4. **BR-004** — Supplier service coverage may be expressed as individual ZIP codes or ZIP ranges.
+5. **BR-005** — A supplier may support multiple product categories.
+6. **BR-006** — A customer satisfaction score is between 1 and 10, or is recorded as `no ratings yet`.
+7. **BR-007** — Supplier mail-order capability is represented by `can_mail_order?` with a value of `y` or `n`.
+8. **BR-008** — ZIP values must retain their ZIP-code meaning, including ZIP codes with a leading zero.
+9. **BR-009** — Only the routing criteria defined in this document affect the routing decision.
 
 ## Supplier eligibility
 
-10. **BUS_RULE-010** — Determine each product's category from the product catalog.
-11. **BUS_RULE-011** — Assign an item only to a supplier that supports its category.
-12. **BUS_RULE-012** — When `mail_order` is false, use only suppliers serving the customer's ZIP.
-13. **BUS_RULE-013** — When `mail_order` is true, suppliers with `can_mail_order? = y` are eligible regardless of ZIP coverage.
-14. **BUS_RULE-014** — Mail-order capability never overrides the product-category requirement.
+10. **BR-010** — Each line item's product category is determined from its product code.
+11. **BR-011** — A supplier can fulfill a line item only when it supports that line item's product category.
+12. **BR-012** — When `mail_order` is false, a supplier satisfies the geographic condition only when it serves the customer's ZIP code.
+13. **BR-013** — When `mail_order` is true, a supplier with `can_mail_order? = y` satisfies the geographic condition regardless of ZIP coverage.
+14. **BR-014** — Mail-order capability does not override the product-category requirement.
 
-## Selection priorities
+## Routing priorities
 
-Apply these in order:
+The routing decision applies these priorities in order:
 
-15. **BUS_RULE-015** — Feasibility: only assign items to suppliers eligible to fulfill them.
-16. **BUS_RULE-016** — Consolidation: prefer fewer shipments; use one supplier for the entire order when possible.
-17. **BUS_RULE-017** — Quality: among otherwise suitable options, prefer higher customer satisfaction scores.
-18. **BUS_RULE-018** — Local preference: prefer local suppliers over mail order when ratings are similar.
-19. **BUS_RULE-019** — A higher rating must not justify an avoidable extra shipment.
-20. **BUS_RULE-020** — Split an order among suppliers when necessary to cover its items.
+15. **BR-015** — **Feasibility:** assign line items only to eligible suppliers.
+16. **BR-016** — **Customer experience:** prefer fewer shipments and consolidate the order with one supplier when possible.
+17. **BR-017** — **Customer satisfaction:** when multiple otherwise suitable options exist, prefer suppliers with higher customer satisfaction scores.
+18. **BR-018** — **Geographic preference:** prefer local fulfillment over mail-order fulfillment when customer satisfaction scores are similar.
+19. **BR-019** — A lower-priority preference does not override a higher-priority preference.
+20. **BR-020** — Use multiple suppliers when one eligible supplier cannot fulfill the complete order.
 
-## Decision
+## Routing decision and API contract
 
-21. **BUS_RULE-021** — The routing endpoint is `POST /api/route`.
-22. **BUS_RULE-022** — The endpoint always returns HTTP 200; `feasible` communicates the routing outcome.
-23. **BUS_RULE-023** — Success: `feasible: true` and `routing` grouped by supplier. Each group includes `supplier_id`, `supplier_name`, and assigned items. Each item includes `product_code`, `quantity`, `category`, and `fulfillment_mode`.
-24. **BUS_RULE-024** — Failure: `feasible: false` and an `errors` list explaining invalid input or why the order cannot be fulfilled.
-25. **BUS_RULE-025** — An order must include at least one item and a valid customer ZIP.
-26. **BUS_RULE-026** — Report multiple validation errors together when present.
-27. **BUS_RULE-027** — A successful decision must account for all requested items and quantities.
+21. **BR-021** — The routing endpoint is `POST /api/route`.
+22. **BR-022** — The endpoint always returns HTTP 200; `feasible` communicates whether routing succeeded.
+23. **BR-023** — A feasible decision returns `feasible: true` and `routing` grouped by supplier. Each group contains `supplier_id`, `supplier_name`, and assigned line items. Each line item contains `product_code`, `quantity`, `category`, and `fulfillment_mode`.
+24. **BR-024** — An infeasible decision returns `feasible: false` and an `errors` list explaining invalid input or why the order cannot be fulfilled.
+25. **BR-025** — An order must contain at least one line item and a valid customer ZIP code.
+26. **BR-026** — An infeasible decision may report multiple applicable errors.
+27. **BR-027** — A feasible routing decision accounts for every requested line item and quantity.
 
-## Out of scope
+## Auxiliary business rules
 
-The supplied business model contains no stock, capacity, pricing, shipping-cost,
-or delivery-time rules. The requested output is a routing decision, not an order
-placement or shipment booking.
+### Eligibility and selection
 
-## Policies the assessment leaves open
+1. **BRX-001 — Mail-order eligibility:** When `mail_order` is true, a ZIP-local supplier remains eligible without mail-order capability.
+2. **BRX-002 — Shipment counting:** Each supplier assigned at least one line item represents one shipment.
+3. **BRX-003 — Satisfaction calculation:** An unrated supplier has a comparison score of zero. A multi-supplier decision uses the sum of its selected suppliers' customer satisfaction scores.
+4. **BRX-004 — Similar satisfaction:** A minimum-shipment decision has similar customer satisfaction to the best minimum-shipment decision when its average selected-supplier score is no more than 0.5 points lower.
+5. **BRX-005 — Decision tie-break:** Among minimum-shipment decisions with similar customer satisfaction, prefer fewer mail-order shipments, then higher total customer satisfaction, then the lexicographically smaller ordered set of supplier IDs.
 
-These need explicit implementation decisions; no defaults are established in the
-assessment brief. Choices below are what this repository implements.
+### Line-item handling
 
-1. **OPEN-001** — Mail-order permission: whether local suppliers without national shipping remain eligible when `mail_order` is true.
-   - **Choice:** Yes. ZIP-local suppliers stay eligible even when they cannot mail.
-2. **OPEN-002** — Shipment counting: whether each selected supplier counts as one shipment.
-   - **Choice:** Yes. Minimize the number of selected suppliers.
-3. **OPEN-003** — Ratings: how to compare unrated suppliers and combine ratings for split orders.
-   - **Choice:** Unrated suppliers score `0`. Split-plan quality is the sum of selected supplier scores.
-4. **OPEN-004** — Similar ratings: what rating difference permits local preference.
-   - **Choice:** Plans within `0.5 × supplier_count` of the best total score compete on local preference (`SIMILAR_RATING_DIFFERENCE`).
-5. **OPEN-005** — Ties: how to choose consistently between equally preferred routes.
-   - **Choice:** Prefer lower mail-shipment count, then higher score, then lexicographically smaller joined supplier-id sets.
-6. **OPEN-006** — Item allocation: whether quantities may be split, repeated product lines are combined, or partial assignments are returned on failure.
-   - **Choice:** Combine duplicate product lines. Assign each product to one supplier (no quantity splitting). Fail the whole order when any item is uncoverable.
-7. **OPEN-007** — Validation and data quality: exact field constraints and treatment of unknown products, malformed reference data, and duplicate identifiers.
-   - **Choice:** A missing or malformed catalog fails startup; the server does not listen without data. A repeated `product_code` or `supplier_id` keeps the first row; every later row with that key is ignored (whatever else it contains) with one warning per skipped row. Unknown products and invalid orders return `feasible: false` with `errors` (HTTP 200).
-8. **OPEN-008** — Fulfillment modes: naming of mode values beyond the illustrated `local`, and classification when a supplier qualifies both locally and by mail.
-   - **Choice:** Modes are `local` and `mail_order`. A supplier that covers the ZIP is recorded as `local` even if it can also mail.
+6. **BRX-006 — Repeated line items:** Repeated line items for the same product are combined into one total quantity.
+7. **BRX-007 — Indivisible quantity:** A product's full requested quantity is assigned to one supplier.
+8. **BRX-008 — Assignment tie-break:** When multiple selected suppliers can fulfill a line item, assign it to the supplier with the lexicographically smaller supplier ID.
+9. **BRX-009 — Complete fulfillment:** If any line item cannot be fulfilled, the complete order is infeasible and no partial routing is returned.
+
+### Validation and catalog
+
+10. **BRX-010 — Order field validity:** The order ID is non-empty, a valid customer ZIP code has exactly five digits, and the mail-order value is Boolean. Each line item has a non-empty product code and a positive integer quantity.
+11. **BRX-011 — Catalog availability:** A missing or malformed catalog prevents routing.
+12. **BRX-012 — Duplicate catalog identifiers:** For repeated product codes or supplier IDs, the first valid record remains authoritative. Each subsequent record with the same identifier is ignored and reported.
+13. **BRX-013 — Unknown products:** An order containing an unknown product code is infeasible and includes a reason.
+
+### Fulfillment classification
+
+14. **BRX-014 — Fulfillment modes:** The supported fulfillment modes are `local` and `mail_order`.
+15. **BRX-015 — Dual eligibility:** A supplier eligible both locally and by mail order uses local fulfillment.
+
+### Source-data normalization
+
+16. **BRX-016 — Text normalization:** Surrounding whitespace is ignored. Product categories, `no ratings yet`, and `y`/`n` mail-order values are interpreted without regard to letter case.
+17. **BRX-017 — Supplier-name header:** The supplied `suplier_name` header represents `supplier_name`.
+18. **BRX-018 — Four-digit service ZIP:** A four-digit service ZIP is interpreted as a ZIP code whose leading zero was lost.
+
+## Business boundaries
+
+The assessment defines no rules for inventory, capacity, pricing, shipping cost, or
+delivery time. The required outcome is a routing decision, not order placement or
+shipment booking.
