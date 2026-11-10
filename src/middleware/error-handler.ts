@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
-import { getFailure } from '../models/routing.js';
+import { getFailureResponse } from '../models/routing.js';
 
 const bodyErrorMessages: Record<string, string> = {
   'entity.parse.failed': 'Request body must contain valid JSON.',
@@ -44,5 +44,5 @@ export const handleError: ErrorRequestHandler = (error: unknown, _request, respo
   const { message, log } = describe(error);
   if (log) console.error('Routing request failed:', error);
 
-  response.status(200).json(getFailure([message]));
+  response.status(200).json(getFailureResponse([message]));
 };

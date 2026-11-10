@@ -36,6 +36,6 @@ export type RoutingResponse = z.infer<typeof responseSchema>;
 export type RoutingFailure = z.infer<typeof failureSchema>;
 
 /** Failure response (BUS_RULE-024); always sent with HTTP 200 (BUS_RULE-022). */
-export function getFailure(errors: string[]): RoutingFailure {
+export function getFailureResponse(errors: string[]): RoutingFailure {
   return { feasible: false, errors };
 }
