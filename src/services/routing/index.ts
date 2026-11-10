@@ -4,35 +4,35 @@ import {
   getInfeasibleDecision,
   type RoutingDecision,
 } from '../../models/routing-decision.js';
-import { buildRouting } from './build-routing.js';
+import { assignLineItems } from './assign-line-items.js';
+import { combineAndCategorizeLineItems } from './combine-and-categorize-line-items.js';
 import { findEligibleSuppliers } from './find-eligible-suppliers.js';
-import { findUncoverableErrors } from './find-uncoverable-errors.js';
-import { listCategories } from './list-categories.js';
-import { normalizeOrderItems } from './normalize-order-items.js';
-import { selectEligibleSuppliers } from './select-eligible-suppliers.js';
+import { findUnfulfillableLineItemErrors } from './find-unfulfillable-line-item-errors.js';
+import { listProductCategories } from './list-product-categories.js';
+import { selectRoutingPlan } from './select-routing-plan.js';
 
 /**
- * Route one order against the loaded catalog. Infeasible decisions carry errors;
- * feasible decisions assign every requested quantity (BR-027).
+ * Route one order against the loaded catalog. An infeasible decision carries every
+ * applicable error; a feasible decision assigns every requested quantity (BR-027).
  */
 export function routeOrder(order: Order): RoutingDecision {
-  // 1. Combine repeated lines and resolve each product's category.
-  const { items, errors } = normalizeOrderItems(order);
+  // 1. Combine repeated line items and look up each product category.
+  const { lineItems, errors } = combineAndCategorizeLineItems(order);
   if (errors.length) return getInfeasibleDecision(errors);
 
-  // 2. List the distinct categories the order needs covered.
-  const categories = listCategories(items);
+  // 2. List the distinct product categories the order needs.
+  const productCategories = listProductCategories(lineItems);
 
-  // 3. Keep suppliers that serve this ZIP (or can mail) and carry an ordered category.
-  const eligibleSuppliers = findEligibleSuppliers(order, categories);
+  // 3. Keep suppliers that meet the geographic condition and support a needed category.
+  const eligibleSuppliers = findEligibleSuppliers(order, productCategories);
 
-  // 4. Fail when some category has no eligible supplier at all (BR-015, BRX-009).
-  const uncoverable = findUncoverableErrors(order, items, eligibleSuppliers);
-  if (uncoverable.length) return getInfeasibleDecision(uncoverable);
+  // 4. Infeasible when some line item has no eligible supplier at all (BR-015, BRX-009).
+  const unfulfillable = findUnfulfillableLineItemErrors(order, lineItems, eligibleSuppliers);
+  if (unfulfillable.length) return getInfeasibleDecision(unfulfillable);
 
-  // 5. Pick the fewest suppliers, then best quality and local preference (BR-016…020).
-  const selected = selectEligibleSuppliers(eligibleSuppliers, categories);
+  // 5. Select the routing plan: fewest shipments, then satisfaction, then local (BR-016…020).
+  const plan = selectRoutingPlan(eligibleSuppliers, productCategories);
 
-  // 6. Assign every item to the selected supplier that carries its category.
-  return getFeasibleDecision(buildRouting(items, selected));
+  // 6. The selected plan produces the routing decision: one shipment per plan supplier.
+  return getFeasibleDecision(assignLineItems(lineItems, plan));
 }

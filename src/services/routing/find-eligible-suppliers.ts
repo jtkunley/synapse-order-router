@@ -1,59 +1,72 @@
+import type { EligibleSupplier } from '../../models/eligible-supplier.js';
 import type { Order } from '../../models/order.js';
 import { getCatalog } from '../catalog/index.js';
 import { compareText } from './compare-text.js';
-import type { EligibleSupplier } from './types.js';
 
 /**
- * Build the supplier search space for this order (BR-011…014, BRX-001).
- * Keep the best-rated supplier per identical coverage and local/mail mode.
+ * Find the suppliers eligible for this order (BR-011…014, BRX-001). Keep only the
+ * best-scored supplier per identical supported categories and fulfillment mode.
  */
 export function findEligibleSuppliers(
   order: Order,
-  categories: readonly string[],
+  productCategories: readonly string[],
 ): EligibleSupplier[] {
-  const zip = Number(order.customerZip);
-  const bestByCoverageAndMode = new Map<string, EligibleSupplier>();
+  const customerZip = Number(order.customerZip);
+  const bestByCategoriesAndMode = new Map<string, EligibleSupplier>();
 
   for (const supplier of getCatalog().suppliers) {
-    // 1. The supplier must cover the ZIP, or ship by mail when the order allows it.
-    const local = supplier.serviceZipRanges.some(({ start, end }) => zip >= start && zip <= end);
-    const byMail = order.allowsMailOrder && supplier.canMailOrder;
-    if (!local && !byMail) continue;
+    // 1. Geographic condition: serve the customer's ZIP, or ship by mail when the order allows it.
+    const servesZip = supplier.serviceZipRanges.some(
+      ({ start, end }) => customerZip >= start && customerZip <= end,
+    );
+    const shipsByMail = order.allowsMailOrder && supplier.canMailOrder;
+    const meetsGeographicCondition = servesZip || shipsByMail;
+    if (!meetsGeographicCondition) continue;
 
-    // 2. It must carry at least one ordered category.
-    const covered = categories.filter((category) => supplier.supportedCategories.has(category));
-    if (covered.length === 0) continue;
+    // 2. It must support at least one of the order's product categories.
+    const supportedOrderCategories = productCategories.filter((category) =>
+      supplier.supportedCategories.has(category),
+    );
+    if (supportedOrderCategories.length === 0) continue;
 
-    // 3. With identical coverage and mode, a lower-rated supplier cannot improve a route.
     const eligible: EligibleSupplier = {
       supplier,
-      covers: new Set(covered),
-      local,
-      score: supplier.satisfactionScore ?? 0,
+      supportedOrderCategories: new Set(supportedOrderCategories),
+      // A supplier that serves the ZIP is local even if it can also mail (BRX-015).
+      fulfillmentMode: servesZip ? 'local' : 'mail_order',
+      comparisonScore: supplier.satisfactionScore ?? 0,
     };
-    const key = `${covered.join('\0')}:${local}`;
-    const previous = bestByCoverageAndMode.get(key);
+
+    // 3. With the same categories and mode, a lower-scored supplier cannot improve a plan.
+    const key = `${supportedOrderCategories.join('\0')}:${eligible.fulfillmentMode}`;
+    const previous = bestByCategoriesAndMode.get(key);
     if (!previous || outranks(eligible, previous)) {
-      bestByCoverageAndMode.set(key, eligible);
+      bestByCategoriesAndMode.set(key, eligible);
     }
   }
 
-  // 4. Widest coverage first so the search finds small covers early.
-  return [...bestByCoverageAndMode.values()].sort(compareEligibleSuppliers);
+  // 4. Most supported categories first so plan selection finds small plans early.
+  return [...bestByCategoriesAndMode.values()].sort(compareEligibleSuppliers);
 }
 
-/** Higher rating wins; equal ratings fall back to the smaller supplier id (BRX-005). */
+/** Higher score wins; equal scores fall back to the smaller supplier ID (BRX-005). */
 function outranks(eligible: EligibleSupplier, previous: EligibleSupplier): boolean {
-  if (eligible.score !== previous.score) return eligible.score > previous.score;
+  if (eligible.comparisonScore !== previous.comparisonScore) {
+    return eligible.comparisonScore > previous.comparisonScore;
+  }
   return compareText(eligible.supplier.id, previous.supplier.id) < 0;
 }
 
-/** Wider coverage, then higher rating, then local, then supplier id. */
+/** More supported categories, then higher score, then local, then supplier ID. */
 function compareEligibleSuppliers(left: EligibleSupplier, right: EligibleSupplier): number {
   return (
-    right.covers.size - left.covers.size ||
-    right.score - left.score ||
-    Number(right.local) - Number(left.local) ||
+    right.supportedOrderCategories.size - left.supportedOrderCategories.size ||
+    right.comparisonScore - left.comparisonScore ||
+    localFirst(left) - localFirst(right) ||
     compareText(left.supplier.id, right.supplier.id)
   );
+}
+
+function localFirst(eligible: EligibleSupplier): number {
+  return eligible.fulfillmentMode === 'local' ? 0 : 1;
 }
