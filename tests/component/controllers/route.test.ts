@@ -5,19 +5,21 @@ import request from 'supertest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../../src/app.js';
 import { routePath } from '../../../src/controllers/route.js';
+import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
 import { makeCatalog, makeSupplier } from '../../helpers/catalog.js';
 
 vi.mock('../../../src/services/catalog/index.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../src/services/catalog/index.js')>();
-  return { loadCatalog: vi.fn(actual.loadCatalog) };
+  return { ...actual, loadCatalog: vi.fn(actual.loadCatalog) };
 });
 
 function appWithCatalog(
   products: Record<string, string>,
   suppliers: Parameters<typeof makeCatalog>[1],
 ) {
-  vi.mocked(loadCatalog).mockResolvedValueOnce(makeCatalog(products, suppliers));
+  setCatalog(makeCatalog(products, suppliers));
+  vi.mocked(loadCatalog).mockResolvedValueOnce();
   return createApp();
 }
 

@@ -1,14 +1,15 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { loadCatalog } from '../../../src/services/catalog/index.js';
+import { getCatalog, loadCatalog } from '../../../src/services/catalog/index.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
 
 describe('loadCatalog', () => {
   // BUS_RULE-002, BUS_RULE-003, BUS_RULE-004, BUS_RULE-005, BUS_RULE-006, BUS_RULE-007, BUS_RULE-008
   it('parses ZIP lists, ranges, ratings, and the misspelled supplier_name header', async () => {
-    const catalog = await loadCatalog(join(fixtures, 'catalog-basic'));
+    await loadCatalog(join(fixtures, 'catalog-basic'));
+    const catalog = getCatalog();
 
     expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });
     expect(catalog.products.get('OX-1')).toEqual({ code: 'OX-1', category: 'oxygen' });
@@ -43,7 +44,8 @@ describe('loadCatalog', () => {
 
   // BUS_RULE-003, OPEN-007
   it('keeps the first supplier row when supplier IDs repeat', async () => {
-    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'));
+    await loadCatalog(join(fixtures, 'catalog-duplicate-supplier'));
+    const catalog = getCatalog();
 
     expect(catalog.suppliers).toHaveLength(1);
     expect(catalog.suppliers[0]).toMatchObject({ id: 'SUP-1', name: 'One', rating: 5 });
@@ -51,7 +53,8 @@ describe('loadCatalog', () => {
 
   // BUS_RULE-002, OPEN-007
   it('keeps the first product row when product codes repeat', async () => {
-    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-product'));
+    await loadCatalog(join(fixtures, 'catalog-duplicate-product'));
+    const catalog = getCatalog();
 
     expect(catalog.products.size).toBe(1);
     expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });

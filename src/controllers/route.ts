@@ -1,10 +1,10 @@
 import type { Express } from 'express';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
-import type { Catalog } from '../models/catalog.js';
 import { jsonBody } from '../middleware/json-body.js';
 import { orderSchema } from '../models/order.js';
 import { responseSchema } from '../models/routing.js';
 import type { RoutingFailure } from '../models/routing.js';
+import { getCatalog } from '../services/catalog/index.js';
 import { routeOrder } from '../services/routing/index.js';
 
 /** Order-routing endpoint (BUS_RULE-021…027). Always HTTP 200; outcome is `feasible`. */
@@ -28,7 +28,7 @@ export const routePaths: ZodOpenApiPathsObject = {
   },
 };
 
-export function addRoute(app: Express, catalog: Catalog): void {
+export function addRoute(app: Express): void {
   app.use(routePath, jsonBody);
   app.post(routePath, (request, response) => {
     const order = orderSchema.safeParse(request.body);
@@ -42,6 +42,6 @@ export function addRoute(app: Express, catalog: Catalog): void {
       response.status(200).json(failure);
       return;
     }
-    response.status(200).json(responseSchema.parse(routeOrder(order.data, catalog)));
+    response.status(200).json(responseSchema.parse(routeOrder(order.data, getCatalog())));
   });
 }

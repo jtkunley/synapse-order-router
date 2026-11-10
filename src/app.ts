@@ -8,14 +8,14 @@ import { loadCatalog } from './services/catalog/index.js';
 
 export async function createApp(): Promise<express.Express> {
   // Throws on a missing or malformed catalog so the server never starts without data (OPEN-007).
-  const catalog = await loadCatalog(getEnv().dataDir);
+  await loadCatalog(getEnv().dataDir);
 
   const app = express();
   app.disable('x-powered-by');
 
   addOpenApi(app);
   addDocs(app);
-  addRoute(app, catalog);
+  addRoute(app);
   app.use(handleError);
   return app;
 }

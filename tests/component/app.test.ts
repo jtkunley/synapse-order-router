@@ -1,10 +1,14 @@
 import request from 'supertest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
+import { setCatalog } from '../../src/services/catalog/catalog-store.js';
 import { loadCatalog } from '../../src/services/catalog/index.js';
 import { makeCatalog, makeSupplier } from '../helpers/catalog.js';
 
-vi.mock('../../src/services/catalog/index.js', () => ({ loadCatalog: vi.fn() }));
+vi.mock('../../src/services/catalog/index.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/services/catalog/index.js')>()),
+  loadCatalog: vi.fn(),
+}));
 
 const order = {
   order_id: 'ORD-1',
@@ -30,7 +34,7 @@ describe('createApp', () => {
   // BUS_RULE-021, BUS_RULE-022
   it('disables x-powered-by and serves openapi, docs, and routing', async () => {
     vi.stubEnv('DATA_DIR', '/data');
-    vi.mocked(loadCatalog).mockResolvedValueOnce(catalog);
+    setCatalog(catalog);
     const app = await createApp();
     expect(loadCatalog).toHaveBeenCalledWith('/data');
 
@@ -51,7 +55,7 @@ describe('createApp', () => {
 
   // BUS_RULE-022, BUS_RULE-024
   it('returns HTTP 200 for invalid JSON bodies', async () => {
-    vi.mocked(loadCatalog).mockResolvedValueOnce(catalog);
+    setCatalog(catalog);
     const response = await request(await createApp())
       .post('/api/route')
       .set('Content-Type', 'application/json')

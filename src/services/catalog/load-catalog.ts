@@ -1,25 +1,26 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Catalog } from '../../models/catalog.js';
 import type { Product } from '../../models/product.js';
 import type { Supplier } from '../../models/supplier.js';
+import { setCatalog } from './catalog-store.js';
 import { readRows } from './read-rows.js';
 import { productSchema, supplierSchema } from './schemas.js';
 
 /**
- * Load `products.csv` and `suppliers.csv` from a directory (BUS_RULE-002…007).
+ * Load `products.csv` and `suppliers.csv` from a directory into the catalog
+ * returned by `getCatalog()` (BUS_RULE-002…007).
  * Missing or malformed data rejects; repeated product codes and supplier IDs keep
  * the first row and warn once per skipped row (OPEN-007).
  */
-export async function loadCatalog(directory: string): Promise<Catalog> {
+export async function loadCatalog(directory: string): Promise<void> {
   const [productCsv, supplierCsv] = await Promise.all([
     readFile(join(directory, 'products.csv'), 'utf8'),
     readFile(join(directory, 'suppliers.csv'), 'utf8'),
   ]);
-  return {
+  setCatalog({
     products: loadProducts(productCsv),
     suppliers: loadSuppliers(supplierCsv),
-  };
+  });
 }
 
 /** Keyed by code: routing resolves each order line's category with a direct lookup. */
