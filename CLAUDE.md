@@ -10,7 +10,7 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 | `src/app.ts`       | Loads the catalog; Express app wiring (routes, then error handler)          |
 | `src/routes.ts`    | Registers every endpoint: path, per-route middleware, handler               |
 | `src/config/`      | `getEnv()` — sole reader of `process.env`                                   |
-| `src/controllers/` | One file per endpoint: path, handler(s), OpenAPI spec; no registration      |
+| `src/controllers/` | One file per endpoint: path and handler(s); OpenAPI paths in `openapi.ts`   |
 | `src/middleware/`  | Express request/response middleware                                         |
 | `src/models/`      | Domain schemas/types (Zod + inferred types)                                 |
 | `src/services/`    | Business logic (`catalog/`, `routing/`; each folder exports via `index.ts`) |
