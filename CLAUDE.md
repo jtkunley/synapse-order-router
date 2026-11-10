@@ -24,6 +24,7 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 - Use the built-in console for lightweight process logging in server/runtime paths.
 - Register middleware before controllers; error handler last in `app.ts`.
 - Prefer exact dependency versions; match existing TypeScript/ESM style (`.js` import specifiers).
+- Do not edit `AI_PROMPTS.md`; it is maintained by hand.
 - When committing, split outstanding changes into gradual commits by concern (e.g. one service split, then controller wiring, then tests/docs)—never one catch-all commit for unrelated work.
 
 ## Business behavior
