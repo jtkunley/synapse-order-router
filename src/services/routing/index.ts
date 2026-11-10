@@ -1,5 +1,5 @@
 import type { Order } from '../../models/order.js';
-import { getFailureResponse } from '../../models/routing.js';
+import { getFailureResponse, getSuccessResponse } from '../../models/routing.js';
 import type { RoutingResponse } from '../../models/routing.js';
 import { buildCategoryBits } from './build-category-bits.js';
 import { buildRouting } from './build-routing.js';
@@ -25,5 +25,5 @@ export function routeOrder(order: Order): RoutingResponse {
   if (uncovered) return getFailureResponse(uncovered);
 
   const selected = selectSuppliers(candidates, fullMask, [...categoryBits.values()]);
-  return { feasible: true, routing: buildRouting(items, selected) };
+  return getSuccessResponse(buildRouting(items, selected));
 }

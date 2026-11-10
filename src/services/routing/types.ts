@@ -1,11 +1,11 @@
-import type { RoutingResponse } from '../../models/routing.js';
+import type { RoutingSuccess } from '../../models/routing.js';
 import type { Supplier } from '../../models/supplier.js';
 
 /** Max total-score gap (per selected supplier) that still counts as “similar” (OPEN-004). */
 export const SIMILAR_RATING_DIFFERENCE = 0.5;
 export const EPSILON = 1e-9;
 
-export type Routing = Extract<RoutingResponse, { feasible: true }>['routing'];
+export type Routing = RoutingSuccess['routing'];
 export type RoutedItem = Routing[number]['items'][number];
 export type OrderItem = Omit<RoutedItem, 'fulfillment_mode'>;
 
