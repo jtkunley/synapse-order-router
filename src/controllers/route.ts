@@ -28,9 +28,15 @@ export const routePaths: ZodOpenApiPathsObject = {
   },
 };
 
-export function addRoute(app: Express, catalog: Catalog): void {
+/** `catalog` is undefined when it failed to load; every order then fails (OPEN-007). */
+export function addRoute(app: Express, catalog: Catalog | undefined): void {
   app.use(routePath, jsonBody);
   app.post(routePath, (request, response) => {
+    if (catalog === undefined) {
+      const failure: RoutingFailure = { feasible: false, errors: ['Catalog unavailable.'] };
+      response.status(200).json(failure);
+      return;
+    }
     const order = orderSchema.safeParse(request.body);
     if (!order.success) {
       const failure: RoutingFailure = {

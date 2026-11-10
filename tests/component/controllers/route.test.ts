@@ -2,23 +2,29 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../../src/app.js';
 import { routePath } from '../../../src/controllers/route.js';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
 import { makeCatalog, makeSupplier } from '../../helpers/catalog.js';
 
+vi.mock('../../../src/services/catalog/index.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../src/services/catalog/index.js')>();
+  return { loadCatalog: vi.fn(actual.loadCatalog) };
+});
+
 function appWithCatalog(
   products: Record<string, string>,
   suppliers: Parameters<typeof makeCatalog>[1],
 ) {
-  return createApp(makeCatalog(products, suppliers));
+  vi.mocked(loadCatalog).mockResolvedValueOnce(makeCatalog(products, suppliers));
+  return createApp('unused');
 }
 
 describe('POST /api/route', () => {
   // BUS_RULE-001, BUS_RULE-009, BUS_RULE-010, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, OPEN-008
   it('returns HTTP 200 with the success routing shape', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-1',
         name: 'Local Supply',
@@ -61,7 +67,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-022, BUS_RULE-024, BUS_RULE-025, BUS_RULE-026
   it('returns HTTP 200 with multiple validation errors for invalid orders', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-1',
         categories: new Set(['wheelchair']),
@@ -83,7 +89,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-010, BUS_RULE-012, BUS_RULE-015, BUS_RULE-022, BUS_RULE-024, OPEN-007
   it('returns HTTP 200 when products are unknown or the order is infeasible', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-REMOTE',
         categories: new Set(['wheelchair']),
@@ -122,7 +128,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-012, BUS_RULE-015, OPEN-008
   it('uses only ZIP-local suppliers when mail_order is false', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-MAIL',
         categories: new Set(['wheelchair']),
@@ -156,7 +162,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-011, BUS_RULE-013, BUS_RULE-014, OPEN-008
   it('allows mail-capable suppliers regardless of ZIP when mail_order is true, but still requires category', async () => {
-    const mailWheelchairOnly = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
+    const mailWheelchairOnly = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-MAIL-WC',
         categories: new Set(['wheelchair']),
@@ -196,7 +202,7 @@ describe('POST /api/route', () => {
 
   // OPEN-001, BUS_RULE-018, OPEN-008
   it('keeps local non-mail suppliers eligible when mail_order is true', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOCAL',
         categories: new Set(['wheelchair']),
@@ -229,7 +235,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-016, BUS_RULE-019, OPEN-002
   it('prefers consolidation over a higher total rating with more shipments', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-BOTH',
         categories: new Set(['wheelchair', 'oxygen']),
@@ -270,7 +276,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-017
   it('prefers higher satisfaction among single-supplier options', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair' }, [
       makeSupplier({
         id: 'SUP-LOW',
         categories: new Set(['wheelchair']),
@@ -310,7 +316,7 @@ describe('POST /api/route', () => {
     });
 
     const similar = await request(
-      appWithCatalog(products, [
+      await appWithCatalog(products, [
         local,
         makeSupplier({
           id: 'SUP-MAIL-SIMILAR',
@@ -332,7 +338,7 @@ describe('POST /api/route', () => {
     expect(similar.body.routing[0].supplier_id).toBe('SUP-LOCAL');
 
     const quality = await request(
-      appWithCatalog(products, [
+      await appWithCatalog(products, [
         local,
         makeSupplier({
           id: 'SUP-MAIL-BETTER',
@@ -357,7 +363,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-011, BUS_RULE-020, BUS_RULE-027
   it('splits across suppliers when no single supplier covers every category', async () => {
-    const app = appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
+    const app = await appWithCatalog({ 'WC-1': 'wheelchair', 'OX-1': 'oxygen' }, [
       makeSupplier({
         id: 'SUP-WC',
         categories: new Set(['wheelchair']),
@@ -399,7 +405,7 @@ describe('POST /api/route', () => {
 
   // BUS_RULE-008, BUS_RULE-027, OPEN-006
   it('combines duplicate line items and preserves leading-zero ZIPs', async () => {
-    const app = appWithCatalog({ 'CP-1': 'cpap' }, [
+    const app = await appWithCatalog({ 'CP-1': 'cpap' }, [
       makeSupplier({
         id: 'SUP-BOS',
         categories: new Set(['cpap']),
@@ -435,7 +441,6 @@ describe('POST /api/route', () => {
   // BUS_RULE-002, BUS_RULE-003, BUS_RULE-021, BUS_RULE-022, BUS_RULE-023, BUS_RULE-027, OPEN-008
   it('routes the assessment sample orders through the real catalog', async () => {
     const dataDir = join(dirname(fileURLToPath(import.meta.url)), '../../../data');
-    const catalog = await loadCatalog(dataDir);
     const samples = JSON.parse(await readFile(join(dataDir, 'sample_orders.json'), 'utf8')) as {
       order_id: string;
       customer_zip: string;
@@ -444,7 +449,7 @@ describe('POST /api/route', () => {
       priority?: string;
       notes?: string;
     }[];
-    const app = createApp(catalog);
+    const app = await createApp(dataDir);
 
     for (const sample of samples) {
       const response = await request(app).post(routePath).send(sample);

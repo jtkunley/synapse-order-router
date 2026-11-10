@@ -4,8 +4,17 @@ import { addOpenApi } from './controllers/openapi.js';
 import { addRoute } from './controllers/route.js';
 import { handleError } from './middleware/error-handler.js';
 import type { Catalog } from './models/catalog.js';
+import { loadCatalog } from './services/catalog/index.js';
 
-export function createApp(catalog: Catalog): express.Express {
+export async function createApp(dataDir: string): Promise<express.Express> {
+  let catalog: Catalog | undefined;
+  try {
+    catalog = await loadCatalog(dataDir);
+  } catch (error) {
+    // OPEN-007: serve docs and report the outage per request instead of refusing to start.
+    console.error('Catalog unavailable', error);
+  }
+
   const app = express();
   app.disable('x-powered-by');
 

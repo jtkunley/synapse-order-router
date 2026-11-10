@@ -8,7 +8,7 @@ import { productSchema, supplierSchema } from './schemas.js';
 
 /**
  * Load `products.csv` and `suppliers.csv` from a directory (BUS_RULE-002…007).
- * Malformed data fails fast at boot; repeated product codes and supplier IDs keep
+ * Missing or malformed data rejects; repeated product codes and supplier IDs keep
  * the first row and warn once per skipped row (OPEN-007).
  */
 export async function loadCatalog(directory: string): Promise<Catalog> {
