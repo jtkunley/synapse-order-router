@@ -1,2 +1,1 @@
-export { getCatalog } from './catalog-store.js';
-export { loadCatalog } from './load-catalog.js';
+export { getCatalog, loadCatalog } from './catalog-store.js';
