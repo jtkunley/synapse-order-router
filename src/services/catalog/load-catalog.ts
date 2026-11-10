@@ -7,20 +7,25 @@ import { productSchema, supplierSchema } from './schemas.js';
 
 /**
  * Load `products.csv` and `suppliers.csv` from a directory (BUS_RULE-002…007).
- * Conflicting or duplicate reference data fails fast at boot (OPEN-007).
+ * Malformed data and duplicate supplier IDs fail fast at boot; repeated product
+ * codes keep the first row and warn once per skipped row (OPEN-007).
  */
-export async function loadCatalog(directory: string): Promise<Catalog> {
+export async function loadCatalog(
+  directory: string,
+  output: Pick<Console, 'warn'> = console,
+): Promise<Catalog> {
   const [productCsv, supplierCsv] = await Promise.all([
     readFile(join(directory, 'products.csv'), 'utf8'),
     readFile(join(directory, 'suppliers.csv'), 'utf8'),
   ]);
   const products = new Map<string, Product>();
   for (const product of readRows(productCsv, 'products.csv', productSchema)) {
-    const existing = products.get(product.code);
-    if (existing !== undefined && existing.category !== product.category) {
-      throw new Error(`products.csv: conflicting categories for ${product.code}.`);
+    if (products.has(product.code)) {
+      output.warn(
+        `products.csv: duplicate product code ${product.code} (category ${product.category} ignored); using first entry.`,
+      );
+      continue;
     }
-    // Identical product records occur in the supplied data; they are one catalog entry.
     products.set(product.code, product);
   }
   const suppliers = readRows(supplierCsv, 'suppliers.csv', supplierSchema);

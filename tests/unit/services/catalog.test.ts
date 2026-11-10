@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
@@ -48,11 +48,26 @@ describe('loadCatalog', () => {
     );
   });
 
+  // BUS_RULE-002, OPEN-007
+  it('keeps the first product row and warns once per skipped duplicate', async () => {
+    const output = { warn: vi.fn() };
+    const catalog = await loadCatalog(join(fixtures, 'catalog-duplicate-product'), output);
+
+    expect(catalog.products.get('WC-1')).toEqual({ code: 'WC-1', category: 'wheelchair' });
+    expect(output.warn.mock.calls).toEqual([
+      ['products.csv: duplicate product code WC-1 (category oxygen ignored); using first entry.'],
+      [
+        'products.csv: duplicate product code WC-1 (category wheelchair ignored); using first entry.',
+      ],
+    ]);
+  });
+
   // OPEN-007
-  it('rejects conflicting product categories', async () => {
-    await expect(loadCatalog(join(fixtures, 'catalog-conflict-product'))).rejects.toThrow(
-      /conflicting categories for WC-1/,
-    );
+  it('does not warn when product codes are unique', async () => {
+    const output = { warn: vi.fn() };
+    await loadCatalog(join(fixtures, 'catalog-basic'), output);
+
+    expect(output.warn).not.toHaveBeenCalled();
   });
 
   // OPEN-007
