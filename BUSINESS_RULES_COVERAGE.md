@@ -213,18 +213,17 @@ The routing endpoint is `POST /api/route`.
 
 The endpoint always returns HTTP 200; `feasible` communicates the routing outcome.
 
-| Test file                               | Test case                                                                        |
-| --------------------------------------- | -------------------------------------------------------------------------------- |
-| `component/app.test.ts`                 | disables x-powered-by and serves openapi, docs, and routing                      |
-| `component/app.test.ts`                 | returns HTTP 200 for invalid JSON bodies                                         |
-| `component/app.test.ts`                 | still serves docs and reports catalog unavailable when the catalog fails to load |
-| `component/controllers/route.test.ts`   | returns HTTP 200 with the success routing shape                                  |
-| `component/controllers/route.test.ts`   | returns HTTP 200 with multiple validation errors for invalid orders              |
-| `component/controllers/route.test.ts`   | returns HTTP 200 when products are unknown or the order is infeasible            |
-| `component/controllers/route.test.ts`   | routes the assessment sample orders through the real catalog                     |
-| `unit/middleware/error-handler.test.ts` | returns HTTP 200 with a body-parser message for invalid JSON types               |
-| `unit/middleware/error-handler.test.ts` | returns HTTP 200 with an exposed client message                                  |
-| `unit/middleware/error-handler.test.ts` | logs unexpected errors and returns a generic failure                             |
+| Test file                               | Test case                                                             |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| `component/app.test.ts`                 | disables x-powered-by and serves openapi, docs, and routing           |
+| `component/app.test.ts`                 | returns HTTP 200 for invalid JSON bodies                              |
+| `component/controllers/route.test.ts`   | returns HTTP 200 with the success routing shape                       |
+| `component/controllers/route.test.ts`   | returns HTTP 200 with multiple validation errors for invalid orders   |
+| `component/controllers/route.test.ts`   | returns HTTP 200 when products are unknown or the order is infeasible |
+| `component/controllers/route.test.ts`   | routes the assessment sample orders through the real catalog          |
+| `unit/middleware/error-handler.test.ts` | returns HTTP 200 with a body-parser message for invalid JSON types    |
+| `unit/middleware/error-handler.test.ts` | returns HTTP 200 with an exposed client message                       |
+| `unit/middleware/error-handler.test.ts` | logs unexpected errors and returns a generic failure                  |
 
 ### `BUS_RULE-023`
 
@@ -342,16 +341,16 @@ Item allocation: whether quantities may be split, repeated product lines are com
 
 Validation and data quality: exact field constraints and treatment of unknown products, malformed reference data, and duplicate identifiers.
 
-| Test file                             | Test case                                                                        |
-| ------------------------------------- | -------------------------------------------------------------------------------- |
-| `component/app.test.ts`               | still serves docs and reports catalog unavailable when the catalog fails to load |
-| `component/controllers/route.test.ts` | returns HTTP 200 when products are unknown or the order is infeasible            |
-| `unit/services/catalog.test.ts`       | keeps the first supplier row when supplier IDs repeat                            |
-| `unit/services/catalog.test.ts`       | keeps the first product row when product codes repeat                            |
-| `unit/services/catalog.test.ts`       | rejects empty CSV files                                                          |
-| `unit/services/catalog.test.ts`       | rejects inverted ZIP ranges with a record-level error                            |
-| `unit/services/catalog.test.ts`       | rejects duplicate column headers                                                 |
-| `unit/services/routing.test.ts`       | combines duplicate product lines and returns unknown-product errors              |
+| Test file                             | Test case                                                             |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `component/app.test.ts`               | rejects when the catalog fails to load                                |
+| `component/controllers/route.test.ts` | returns HTTP 200 when products are unknown or the order is infeasible |
+| `unit/services/catalog.test.ts`       | keeps the first supplier row when supplier IDs repeat                 |
+| `unit/services/catalog.test.ts`       | keeps the first product row when product codes repeat                 |
+| `unit/services/catalog.test.ts`       | rejects empty CSV files                                               |
+| `unit/services/catalog.test.ts`       | rejects inverted ZIP ranges with a record-level error                 |
+| `unit/services/catalog.test.ts`       | rejects duplicate column headers                                      |
+| `unit/services/routing.test.ts`       | combines duplicate product lines and returns unknown-product errors   |
 
 ### `OPEN-008`
 
