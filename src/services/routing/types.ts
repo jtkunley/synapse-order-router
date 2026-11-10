@@ -1,19 +1,9 @@
-import type { RoutingSuccess } from '../../models/routing.js';
 import type { Supplier } from '../../models/supplier.js';
 
 /** Max total-score gap (per selected supplier) that still counts as “similar” (BRX-004). */
 export const SIMILAR_RATING_DIFFERENCE = 0.5;
 /** Score differences this small are floating-point noise and count as equal. */
 export const SCORE_TOLERANCE = 1e-9;
-
-export type Routing = RoutingSuccess['routing'];
-
-/** One combined order line with its catalog category. */
-export interface OrderItem {
-  product_code: string;
-  quantity: number;
-  category: string;
-}
 
 /** Eligible supplier for this order. */
 export interface EligibleSupplier {

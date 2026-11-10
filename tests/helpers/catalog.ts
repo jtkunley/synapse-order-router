@@ -1,5 +1,5 @@
 import type { Catalog } from '../../src/models/catalog.js';
-import type { Order } from '../../src/models/order.js';
+import type { OrderRequest } from '../../src/models/order-request.js';
 import type { Supplier } from '../../src/models/supplier.js';
 
 export function makeSupplier(
@@ -26,7 +26,9 @@ export function makeCatalog(
   };
 }
 
-export function makeOrder(overrides: Partial<Order> & Pick<Order, 'items'>): Order {
+export function makeOrder(
+  overrides: Partial<OrderRequest> & Pick<OrderRequest, 'items'>,
+): OrderRequest {
   return {
     order_id: overrides.order_id ?? 'ORD-TEST',
     customer_zip: overrides.customer_zip ?? '10001',

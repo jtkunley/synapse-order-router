@@ -11,13 +11,13 @@ export function findEligibleSuppliers(
   order: Order,
   categories: readonly string[],
 ): EligibleSupplier[] {
-  const zip = Number(order.customer_zip);
+  const zip = Number(order.customerZip);
   const bestByCoverageAndMode = new Map<string, EligibleSupplier>();
 
   for (const supplier of getCatalog().suppliers) {
     // 1. The supplier must cover the ZIP, or ship by mail when the order allows it.
     const local = supplier.serviceZipRanges.some(({ start, end }) => zip >= start && zip <= end);
-    const byMail = order.mail_order && supplier.canMailOrder;
+    const byMail = order.allowsMailOrder && supplier.canMailOrder;
     if (!local && !byMail) continue;
 
     // 2. It must carry at least one ordered category.

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { orderSchema } from '../../../src/models/order.js';
+import { orderRequestSchema } from '../../../src/models/order-request.js';
 
-describe('orderSchema', () => {
+describe('orderRequestSchema', () => {
   // BUS_RULE-001, BUS_RULE-008, BUS_RULE-009
   it('accepts a valid order and strips unused sample fields', () => {
-    const parsed = orderSchema.parse({
+    const parsed = orderRequestSchema.parse({
       order_id: ' ORD-1 ',
       customer_zip: '02130',
       mail_order: true,
@@ -23,7 +23,7 @@ describe('orderSchema', () => {
 
   // BUS_RULE-025, BUS_RULE-026
   it('reports multiple validation errors together', () => {
-    const result = orderSchema.safeParse({
+    const result = orderRequestSchema.safeParse({
       order_id: '',
       customer_zip: '213',
       mail_order: 'yes',
@@ -41,7 +41,7 @@ describe('orderSchema', () => {
   // BUS_RULE-025
   it('requires at least one line item and a five-digit ZIP', () => {
     expect(
-      orderSchema.safeParse({
+      orderRequestSchema.safeParse({
         order_id: 'ORD-1',
         customer_zip: '10001',
         mail_order: false,
@@ -50,7 +50,7 @@ describe('orderSchema', () => {
     ).toBe(false);
 
     expect(
-      orderSchema.safeParse({
+      orderRequestSchema.safeParse({
         order_id: 'ORD-1',
         customer_zip: '1000',
         mail_order: false,

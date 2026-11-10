@@ -4,18 +4,18 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 
 ## Layout
 
-| Path               | Responsibility                                                              |
-| ------------------ | --------------------------------------------------------------------------- |
-| `src/main.ts`      | Process entrypoint; loads config, builds the app, listens, wires runtime    |
-| `src/app.ts`       | Loads the catalog; Express app wiring (routes, then error handler)          |
-| `src/routes.ts`    | Registers every endpoint: path, per-route middleware, handler               |
-| `src/config/`      | `getEnv()` — sole reader of `process.env`                                   |
-| `src/controllers/` | One file per endpoint: path and handler(s); OpenAPI paths in `openapi.ts`   |
-| `src/middleware/`  | Express request/response middleware                                         |
-| `src/models/`      | Domain schemas/types (Zod + inferred types)                                 |
-| `src/services/`    | Business logic (`catalog/`, `routing/`; each folder exports via `index.ts`) |
-| `src/runtime/`     | Process fatal-error and shutdown handling (fatal, signals)                  |
-| `data/`            | Assessment CSV/JSON inputs                                                  |
+| Path               | Responsibility                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `src/main.ts`      | Process entrypoint; loads config, builds the app, listens, wires runtime               |
+| `src/app.ts`       | Loads the catalog; Express app wiring (routes, then error handler)                     |
+| `src/routes.ts`    | Registers every endpoint: path, per-route middleware, handler                          |
+| `src/config/`      | `getEnv()` — sole reader of `process.env`                                              |
+| `src/controllers/` | One file per endpoint: path and handler(s); OpenAPI paths in `openapi.ts`              |
+| `src/middleware/`  | Express request/response middleware                                                    |
+| `src/models/`      | Domain types; API contract schemas and translators in `*-request.ts` / `*-response.ts` |
+| `src/services/`    | Business logic (`catalog/`, `routing/`; each folder exports via `index.ts`)            |
+| `src/runtime/`     | Process fatal-error and shutdown handling (fatal, signals)                             |
+| `data/`            | Assessment CSV/JSON inputs                                                             |
 
 ## Conventions
 

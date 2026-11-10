@@ -1,7 +1,11 @@
 import type { Request, Response } from 'express';
 import { formatIssues } from '../models/format-issues.js';
-import { orderSchema } from '../models/order.js';
-import { getFailureResponse, responseSchema } from '../models/routing.js';
+import { orderRequestSchema, toOrder } from '../models/order-request.js';
+import {
+  getFailureResponse,
+  responseSchema,
+  toRoutingResponse,
+} from '../models/routing-response.js';
 import { routeOrder } from '../services/routing/index.js';
 
 /** Order-routing endpoint (BR-021…027). Always HTTP 200; outcome is `feasible`. */
@@ -10,7 +14,7 @@ export const orderRoutingPath = '/api/route';
 export function handleOrderRouting(request: Request, response: Response): void {
   // Validate the request body. safeParse returns every issue instead of throwing, so all
   // validation errors are reported together as a feasible: false response (BR-024…026, BRX-010).
-  const order = orderSchema.safeParse(request.body);
+  const order = orderRequestSchema.safeParse(request.body);
 
   // validation failed, return a failure response
   if (!order.success) {
@@ -19,7 +23,9 @@ export function handleOrderRouting(request: Request, response: Response): void {
   }
 
   // validation successful, route the order and return the response
+  const decision = routeOrder(toOrder(order.data));
+
   // responseSchema.parse checks our own output against the published contract: a mismatch is
   // a bug, so it throws to the error handler instead of sending an off-spec body.
-  response.status(200).json(responseSchema.parse(routeOrder(order.data)));
+  response.status(200).json(responseSchema.parse(toRoutingResponse(decision)));
 }

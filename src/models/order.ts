@@ -1,17 +1,19 @@
-import { z } from 'zod';
+/** A request to route one or more line items for a customer ZIP code. */
+export interface Order {
+  id: string;
+  customerZip: string;
+  /** The customer accepts mail-order fulfillment (BR-012, BR-013). */
+  allowsMailOrder: boolean;
+  lineItems: readonly LineItem[];
+}
 
-export const quantitySchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+/** A product code and requested quantity within an order. */
+export interface LineItem {
+  productCode: string;
+  quantity: number;
+}
 
-export const orderSchema = z.object({
-  order_id: z.string().trim().min(1),
-  customer_zip: z
-    .string()
-    .trim()
-    .regex(/^\d{5}$/, 'Must be a five-digit ZIP code.'),
-  mail_order: z.boolean(),
-  items: z
-    .array(z.object({ product_code: z.string().trim().min(1), quantity: quantitySchema }))
-    .min(1, 'Order must include at least one line item.'),
-});
-
-export type Order = z.infer<typeof orderSchema>;
+/** A line item with its product category from the catalog (BR-010). */
+export interface CategorizedLineItem extends LineItem {
+  category: string;
+}

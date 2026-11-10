@@ -1,18 +1,20 @@
-import type { EligibleSupplier, OrderItem, Routing } from './types.js';
+import type { CategorizedLineItem } from '../../models/order.js';
+import type { Shipment } from '../../models/routing-decision.js';
+import type { EligibleSupplier } from './types.js';
 
 /**
- * Assign each normalized item to one selected supplier and set fulfillment_mode
+ * Assign each normalized item to one selected supplier and set its fulfillment mode
  * (BR-023, BRX-007, BRX-008, BRX-015). Local ZIP coverage wins over mail labeling.
  */
 export function buildRouting(
-  items: readonly OrderItem[],
+  items: readonly CategorizedLineItem[],
   selected: readonly EligibleSupplier[],
-): Routing {
-  // 1. One routing group per selected supplier, in selection order.
-  const routing: Routing = selected.map(({ supplier }) => ({
-    supplier_id: supplier.id,
-    supplier_name: supplier.name,
-    items: [],
+): Shipment[] {
+  // 1. One shipment per selected supplier, in selection order.
+  const shipments: Shipment[] = selected.map(({ supplier, local }) => ({
+    supplier,
+    fulfillmentMode: local ? 'local' : 'mail_order',
+    lineItems: [],
   }));
 
   // 2. Each item goes to the first selected supplier that carries its category.
@@ -20,9 +22,8 @@ export function buildRouting(
     const index = selected.findIndex(({ supplier }) =>
       supplier.supportedCategories.has(item.category),
     );
-    const fulfillment_mode = selected[index]!.local ? 'local' : 'mail_order';
-    routing[index]!.items.push({ ...item, fulfillment_mode });
+    shipments[index]!.lineItems.push(item);
   }
 
-  return routing;
+  return shipments;
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { quantitySchema } from './order.js';
+import { quantitySchema } from './order-request.js';
+import type { RoutingDecision } from './routing-decision.js';
 
 export const failureSchema = z.object({
   feasible: z.literal(false),
@@ -42,4 +43,22 @@ export function getSuccessResponse(routing: RoutingSuccess['routing']): RoutingS
 /** Failure response (BR-024); always sent with HTTP 200 (BR-022). */
 export function getFailureResponse(errors: string[]): RoutingFailure {
   return { feasible: false, errors };
+}
+
+/** Translate a domain routing decision into the response body. */
+export function toRoutingResponse(decision: RoutingDecision): RoutingResponse {
+  if (!decision.feasible) return getFailureResponse(decision.errors);
+
+  return getSuccessResponse(
+    decision.shipments.map(({ supplier, fulfillmentMode, lineItems }) => ({
+      supplier_id: supplier.id,
+      supplier_name: supplier.name,
+      items: lineItems.map((lineItem) => ({
+        product_code: lineItem.productCode,
+        quantity: lineItem.quantity,
+        category: lineItem.category,
+        fulfillment_mode: fulfillmentMode,
+      })),
+    })),
+  );
 }

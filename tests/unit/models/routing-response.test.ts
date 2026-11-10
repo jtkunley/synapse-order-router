@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { failureSchema, responseSchema } from '../../../src/models/routing.js';
+import { failureSchema, responseSchema } from '../../../src/models/routing-response.js';
 
 describe('responseSchema', () => {
   // BUS_RULE-023

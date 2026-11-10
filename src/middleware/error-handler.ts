@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
-import { getFailureResponse } from '../models/routing.js';
+import { getFailureResponse } from '../models/routing-response.js';
 
 const bodyErrorMessages: Record<string, string> = {
   'entity.parse.failed': 'Request body must contain valid JSON.',

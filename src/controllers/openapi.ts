@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import { createDocument } from 'zod-openapi';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
-import { orderSchema } from '../models/order.js';
-import { responseSchema } from '../models/routing.js';
+import { orderRequestSchema } from '../models/order-request.js';
+import { responseSchema } from '../models/routing-response.js';
 import { orderRoutingPath } from './order-routing.js';
 
 /** Machine-readable OpenAPI 3.1 document generated from the same Zod schemas used at runtime. */
@@ -14,7 +14,7 @@ const orderRoutingPaths: ZodOpenApiPathsObject = {
       operationId: 'routeOrder',
       requestBody: {
         required: true,
-        content: { 'application/json': { schema: orderSchema } },
+        content: { 'application/json': { schema: orderRequestSchema } },
       },
       responses: {
         '200': {

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
-import { routeOrder } from '../../../src/services/routing/index.js';
+import { toOrder, type OrderRequest } from '../../../src/models/order-request.js';
+import { toRoutingResponse } from '../../../src/models/routing-response.js';
+import { routeOrder as routeDomainOrder } from '../../../src/services/routing/index.js';
 import { makeCatalog, makeOrder, makeSupplier } from '../../helpers/catalog.js';
+
+function routeOrder(request: OrderRequest) {
+  return toRoutingResponse(routeDomainOrder(toOrder(request)));
+}
 
 describe('routeOrder', () => {
   // BUS_RULE-010, BUS_RULE-024, OPEN-006, OPEN-007
