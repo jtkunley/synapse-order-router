@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import request from 'supertest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../../src/app.js';
-import { routePath } from '../../../src/controllers/route.js';
+import { orderRoutingPath } from '../../../src/controllers/order-routing.js';
 import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
 import { loadCatalog } from '../../../src/services/catalog/index.js';
 import { makeCatalog, makeSupplier } from '../../helpers/catalog.js';
@@ -41,7 +41,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -81,7 +81,7 @@ describe('POST /api/route', () => {
       }),
     ]);
 
-    const response = await request(app).post(routePath).send({
+    const response = await request(app).post(orderRoutingPath).send({
       order_id: '',
       customer_zip: '213',
       mail_order: false,
@@ -106,7 +106,7 @@ describe('POST /api/route', () => {
     ]);
 
     const unknown = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -120,7 +120,7 @@ describe('POST /api/route', () => {
     });
 
     const infeasible = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -152,7 +152,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -179,7 +179,7 @@ describe('POST /api/route', () => {
     ]);
 
     const routed = await request(mailWheelchairOnly)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -194,7 +194,7 @@ describe('POST /api/route', () => {
     });
 
     const wrongCategory = await request(mailWheelchairOnly)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -226,7 +226,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -263,7 +263,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -298,7 +298,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -333,7 +333,7 @@ describe('POST /api/route', () => {
         }),
       ]),
     )
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -355,7 +355,7 @@ describe('POST /api/route', () => {
         }),
       ]),
     )
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -385,7 +385,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '10001',
@@ -421,7 +421,7 @@ describe('POST /api/route', () => {
     ]);
 
     const response = await request(app)
-      .post(routePath)
+      .post(orderRoutingPath)
       .send({
         order_id: 'ORD-1',
         customer_zip: '02130',
@@ -459,7 +459,7 @@ describe('POST /api/route', () => {
     const app = await createApp();
 
     for (const sample of samples) {
-      const response = await request(app).post(routePath).send(sample);
+      const response = await request(app).post(orderRoutingPath).send(sample);
       expect(response.status, sample.order_id).toBe(200);
       expect(response.body.feasible, sample.order_id).toBe(true);
 

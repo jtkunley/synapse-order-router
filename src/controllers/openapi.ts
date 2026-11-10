@@ -3,13 +3,13 @@ import { createDocument } from 'zod-openapi';
 import type { ZodOpenApiPathsObject } from 'zod-openapi';
 import { orderSchema } from '../models/order.js';
 import { responseSchema } from '../models/routing.js';
-import { routePath } from './route.js';
+import { orderRoutingPath } from './order-routing.js';
 
 /** Machine-readable OpenAPI 3.1 document generated from the same Zod schemas used at runtime. */
 export const openApiPath = '/openapi.json';
 
-const routePaths: ZodOpenApiPathsObject = {
-  [routePath]: {
+const orderRoutingPaths: ZodOpenApiPathsObject = {
+  [orderRoutingPath]: {
     post: {
       operationId: 'routeOrder',
       requestBody: {
@@ -34,7 +34,7 @@ const specification = createDocument({
     description:
       'Routes multi-item orders to eligible suppliers. Responses always use HTTP 200; check `feasible`.',
   },
-  paths: routePaths,
+  paths: orderRoutingPaths,
 });
 
 export function handleOpenApi(_request: Request, response: Response): void {

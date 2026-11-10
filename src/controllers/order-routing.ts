@@ -6,9 +6,9 @@ import { getCatalog } from '../services/catalog/index.js';
 import { routeOrder } from '../services/routing/index.js';
 
 /** Order-routing endpoint (BUS_RULE-021…027). Always HTTP 200; outcome is `feasible`. */
-export const routePath = '/api/route';
+export const orderRoutingPath = '/api/route';
 
-export function handleRoute(request: Request, response: Response): void {
+export function handleOrderRouting(request: Request, response: Response): void {
   const order = orderSchema.safeParse(request.body);
   if (!order.success) {
     const failure: RoutingFailure = {
