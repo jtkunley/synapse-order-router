@@ -27,6 +27,7 @@ export async function loadCatalog(
   };
 }
 
+/** Keyed by code: routing resolves each order line's category with a direct lookup. */
 function loadProducts(csv: string, output: WarnOutput): Map<string, Product> {
   const products = new Map<string, Product>();
   for (const product of readRows(csv, 'products.csv', productSchema)) {
@@ -41,6 +42,10 @@ function loadProducts(csv: string, output: WarnOutput): Map<string, Product> {
   return products;
 }
 
+/**
+ * A list, not a map: routing scans every supplier for eligibility and never looks
+ * one up by ID. The ID set exists only to detect duplicate rows while loading.
+ */
 function loadSuppliers(csv: string, output: WarnOutput): Supplier[] {
   const suppliers: Supplier[] = [];
   const supplierIds = new Set<string>();
