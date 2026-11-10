@@ -19,5 +19,7 @@ export function handleOrderRouting(request: Request, response: Response): void {
   }
 
   // validation successful, route the order and return the response
+  // responseSchema.parse checks our own output against the published contract: a mismatch is
+  // a bug, so it throws to the error handler instead of sending an off-spec body.
   response.status(200).json(responseSchema.parse(routeOrder(order.data)));
 }
