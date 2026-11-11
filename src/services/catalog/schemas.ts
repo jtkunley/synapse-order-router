@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Product } from '../../models/product.js';
-import type { Supplier } from '../../models/supplier.js';
+import type { Product } from '../../models/product';
+import type { Supplier } from '../../models/supplier';
 
 /** Zod parsers for the assessment CSV column shapes (BR-004…008, BRX-016…018). */
 

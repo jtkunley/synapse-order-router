@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { getCatalog, loadCatalog } from '../../../src/services/catalog/index.js';
+import { getCatalog, loadCatalog } from '../../../src/services/catalog/index';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures');
 

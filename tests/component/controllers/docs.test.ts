@@ -1,9 +1,9 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { docsPath } from '../../../src/controllers/docs.js';
-import { openApiPath } from '../../../src/controllers/openapi.js';
-import { addRoutes } from '../../../src/routes.js';
+import { docsPath } from '../../../src/controllers/docs';
+import { openApiPath } from '../../../src/controllers/openapi';
+import { addRoutes } from '../../../src/routes';
 
 describe('GET /docs', () => {
   it('serves an HTML OpenAPI viewer pointed at /openapi.json', async () => {

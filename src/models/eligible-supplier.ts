@@ -1,5 +1,5 @@
-import type { FulfillmentMode } from './routing-decision.js';
-import type { Supplier } from './supplier.js';
+import type { FulfillmentMode } from './routing-decision';
+import type { Supplier } from './supplier';
 
 /**
  * A supplier that supports at least one of the order's product categories and meets the

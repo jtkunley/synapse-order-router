@@ -1,8 +1,8 @@
 import express from 'express';
-import { getEnv } from './config/env.js';
-import { handleError } from './middleware/error-handler.js';
-import { addRoutes } from './routes.js';
-import { loadCatalog } from './services/catalog/index.js';
+import { getEnv } from './config/env';
+import { handleError } from './middleware/error-handler';
+import { addRoutes } from './routes';
+import { loadCatalog } from './services/catalog/index';
 
 export async function createApp(): Promise<express.Express> {
   // Throws on a missing or malformed catalog so the server never starts without data (BRX-011).

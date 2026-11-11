@@ -1,5 +1,5 @@
-import type { EligibleSupplier } from '../../models/eligible-supplier.js';
-import { compareText } from './compare-text.js';
+import type { EligibleSupplier } from '../../models/eligible-supplier';
+import { compareText } from './compare-text';
 
 /** Supplier IDs in order, joined: the last routing-plan tie-break (BRX-005). */
 export function getTieBreakKey(suppliers: readonly EligibleSupplier[]): string {

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getEnv } from '../../../src/config/env.js';
+import { getEnv } from '../../../src/config/env';
 
 const original = { PORT: process.env.PORT, DATA_DIR: process.env.DATA_DIR };
 

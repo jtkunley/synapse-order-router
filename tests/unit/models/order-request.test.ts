@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { orderRequestSchema, toOrder } from '../../../src/models/order-request.js';
+import { orderRequestSchema, toOrder } from '../../../src/models/order-request';
 
 const validRequest = {
   order_id: 'ORD-1',

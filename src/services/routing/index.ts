@@ -1,15 +1,15 @@
-import type { Order } from '../../models/order.js';
+import type { Order } from '../../models/order';
 import {
   getFeasibleDecision,
   getInfeasibleDecision,
   type RoutingDecision,
-} from '../../models/routing-decision.js';
-import { assignLineItems } from './assign-line-items.js';
-import { combineAndCategorizeLineItems } from './combine-and-categorize-line-items.js';
-import { findEligibleSuppliers } from './find-eligible-suppliers.js';
-import { findUnfulfillableLineItemErrors } from './find-unfulfillable-line-item-errors.js';
-import { listProductCategories } from './list-product-categories.js';
-import { selectRoutingPlan } from './select-routing-plan.js';
+} from '../../models/routing-decision';
+import { assignLineItems } from './assign-line-items';
+import { combineAndCategorizeLineItems } from './combine-and-categorize-line-items';
+import { findEligibleSuppliers } from './find-eligible-suppliers';
+import { findUnfulfillableLineItemErrors } from './find-unfulfillable-line-item-errors';
+import { listProductCategories } from './list-product-categories';
+import { selectRoutingPlan } from './select-routing-plan';
 
 /**
  * Route one order against the loaded catalog. An infeasible decision carries every

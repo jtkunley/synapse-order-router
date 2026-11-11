@@ -1,12 +1,12 @@
 import request from 'supertest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createApp } from '../../src/app.js';
-import { setCatalog } from '../../src/services/catalog/catalog-store.js';
-import { loadCatalog } from '../../src/services/catalog/index.js';
-import { makeCatalog, makeSupplier } from '../helpers/catalog.js';
+import { createApp } from '../../src/app';
+import { setCatalog } from '../../src/services/catalog/catalog-store';
+import { loadCatalog } from '../../src/services/catalog/index';
+import { makeCatalog, makeSupplier } from '../helpers/catalog';
 
-vi.mock('../../src/services/catalog/index.js', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../src/services/catalog/index.js')>()),
+vi.mock('../../src/services/catalog/index', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/services/catalog/index')>()),
   loadCatalog: vi.fn(),
 }));
 

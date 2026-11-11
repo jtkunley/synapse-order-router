@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { Server } from 'node:http';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { enableServerErrorHandling, handleFatalError } from '../../../src/runtime/fatal-error.js';
+import { enableServerErrorHandling, handleFatalError } from '../../../src/runtime/fatal-error';
 
 afterEach(() => {
   vi.restoreAllMocks();

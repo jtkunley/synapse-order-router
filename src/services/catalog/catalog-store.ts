@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Catalog } from '../../models/catalog.js';
-import type { Product } from '../../models/product.js';
-import type { Supplier } from '../../models/supplier.js';
-import { readRows } from './read-rows.js';
-import { productSchema, supplierSchema } from './schemas.js';
+import type { Catalog } from '../../models/catalog';
+import type { Product } from '../../models/product';
+import type { Supplier } from '../../models/supplier';
+import { readRows } from './read-rows';
+import { productSchema, supplierSchema } from './schemas';
 
 let current: Catalog | undefined;
 

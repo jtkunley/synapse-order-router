@@ -1,7 +1,7 @@
-import type { EligibleSupplier } from '../../models/eligible-supplier.js';
-import type { Order } from '../../models/order.js';
-import { getCatalog } from '../catalog/index.js';
-import { compareText } from './compare-text.js';
+import type { EligibleSupplier } from '../../models/eligible-supplier';
+import type { Order } from '../../models/order';
+import { getCatalog } from '../catalog/index';
+import { compareText } from './compare-text';
 
 /**
  * Find the suppliers eligible for this order (BR-011…014, BRX-001). Keep only the

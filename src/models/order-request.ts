@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Order } from './order.js';
+import type { Order } from './order';
 
 export const quantitySchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 

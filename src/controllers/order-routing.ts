@@ -1,12 +1,8 @@
 import type { Request, Response } from 'express';
-import { formatIssues } from '../models/format-issues.js';
-import { orderRequestSchema, toOrder } from '../models/order-request.js';
-import {
-  getFailureResponse,
-  responseSchema,
-  toRoutingResponse,
-} from '../models/routing-response.js';
-import { routeOrder } from '../services/routing/index.js';
+import { formatIssues } from '../models/format-issues';
+import { orderRequestSchema, toOrder } from '../models/order-request';
+import { getFailureResponse, responseSchema, toRoutingResponse } from '../models/routing-response';
+import { routeOrder } from '../services/routing/index';
 
 /** Order-routing endpoint (BR-021…027). Always HTTP 200; outcome is `feasible`. */
 export const orderRoutingPath = '/api/route';

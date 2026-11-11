@@ -3,8 +3,8 @@ import {
   failureSchema,
   responseSchema,
   toRoutingResponse,
-} from '../../../src/models/routing-response.js';
-import { makeSupplier } from '../../helpers/catalog.js';
+} from '../../../src/models/routing-response';
+import { makeSupplier } from '../../helpers/catalog';
 
 describe('responseSchema', () => {
   // BR-023

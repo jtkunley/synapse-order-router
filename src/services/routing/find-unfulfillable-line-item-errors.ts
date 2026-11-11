@@ -1,5 +1,5 @@
-import type { EligibleSupplier } from '../../models/eligible-supplier.js';
-import type { CategorizedLineItem, Order } from '../../models/order.js';
+import type { EligibleSupplier } from '../../models/eligible-supplier';
+import type { CategorizedLineItem, Order } from '../../models/order';
 
 /** One error per line item whose category no eligible supplier supports (BR-015, BRX-009). */
 export function findUnfulfillableLineItemErrors(

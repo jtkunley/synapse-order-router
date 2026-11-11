@@ -1,5 +1,5 @@
-import type { CategorizedLineItem } from './order.js';
-import type { Supplier } from './supplier.js';
+import type { CategorizedLineItem } from './order';
+import type { Supplier } from './supplier';
 
 /** Supported fulfillment modes (BRX-014). */
 export type FulfillmentMode = 'local' | 'mail_order';

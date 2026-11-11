@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
-import { handleError } from '../../../src/middleware/error-handler.js';
+import { handleError } from '../../../src/middleware/error-handler';
 
 function appWithError(error: unknown): express.Express {
   const app = express();

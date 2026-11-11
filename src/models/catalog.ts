@@ -1,5 +1,5 @@
-import type { Product } from './product.js';
-import type { Supplier } from './supplier.js';
+import type { Product } from './product';
+import type { Supplier } from './supplier';
 
 export interface Catalog {
   /** Keyed by `Product.code`. */

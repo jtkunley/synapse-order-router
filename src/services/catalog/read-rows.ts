@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse/sync';
 import type { z } from 'zod';
-import { formatIssues } from '../../models/format-issues.js';
+import { formatIssues } from '../../models/format-issues';
 
 /** Parse a CSV into records and validate each row; normalize known assessment quirks. */
 export function readRows<T>(content: string, filename: string, schema: z.ZodType<T>): T[] {

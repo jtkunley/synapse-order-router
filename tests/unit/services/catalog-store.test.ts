@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getCatalog, setCatalog } from '../../../src/services/catalog/catalog-store.js';
-import { makeCatalog } from '../../helpers/catalog.js';
+import { getCatalog, setCatalog } from '../../../src/services/catalog/catalog-store';
+import { makeCatalog } from '../../helpers/catalog';
 
 describe('catalog store', () => {
   it('throws before a catalog is loaded, then returns the stored catalog', () => {

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { Server } from 'node:http';
 import { describe, expect, it, vi } from 'vitest';
-import { enableGracefulShutdown } from '../../../src/runtime/graceful-shutdown.js';
+import { enableGracefulShutdown } from '../../../src/runtime/graceful-shutdown';
 
 function mockOutput() {
   return {

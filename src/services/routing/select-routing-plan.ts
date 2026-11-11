@@ -1,7 +1,7 @@
-import type { EligibleSupplier } from '../../models/eligible-supplier.js';
-import type { RoutingPlan } from '../../models/routing-plan.js';
-import { compareText } from './compare-text.js';
-import { getTieBreakKey } from './get-tie-break-key.js';
+import type { EligibleSupplier } from '../../models/eligible-supplier';
+import type { RoutingPlan } from '../../models/routing-plan';
+import { compareText } from './compare-text';
+import { getTieBreakKey } from './get-tie-break-key';
 
 /** Largest average-score gap below the best plan that still counts as similar (BRX-004). */
 const SIMILAR_SATISFACTION_DIFFERENCE = 0.5;

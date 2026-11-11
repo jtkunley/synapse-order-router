@@ -1,6 +1,6 @@
-import type { Catalog } from '../../src/models/catalog.js';
-import type { Order } from '../../src/models/order.js';
-import type { Supplier } from '../../src/models/supplier.js';
+import type { Catalog } from '../../src/models/catalog';
+import type { Order } from '../../src/models/order';
+import type { Supplier } from '../../src/models/supplier';
 
 /** Serves only ZIP 10001, the default customer ZIP of `makeOrder`. */
 export const LOCAL_ZIPS = [{ start: 10001, end: 10001 }];

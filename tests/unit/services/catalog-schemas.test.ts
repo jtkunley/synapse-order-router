@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { productSchema, supplierSchema } from '../../../src/services/catalog/schemas.js';
+import { productSchema, supplierSchema } from '../../../src/services/catalog/schemas';
 
 const supplierRow = {
   supplier_id: 'SUP-1',

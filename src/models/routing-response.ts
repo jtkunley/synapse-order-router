@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { quantitySchema } from './order-request.js';
-import type { RoutingDecision } from './routing-decision.js';
+import { quantitySchema } from './order-request';
+import type { RoutingDecision } from './routing-decision';
 
 export const failureSchema = z.object({
   feasible: z.literal(false),

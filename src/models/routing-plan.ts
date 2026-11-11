@@ -1,4 +1,4 @@
-import type { EligibleSupplier } from './eligible-supplier.js';
+import type { EligibleSupplier } from './eligible-supplier';
 
 /** A proposed set of eligible suppliers capable of fulfilling the complete order. */
 export interface RoutingPlan {

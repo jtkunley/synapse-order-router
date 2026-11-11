@@ -1,6 +1,6 @@
-import type { CategorizedLineItem, Order } from '../../models/order.js';
-import { getCatalog } from '../catalog/index.js';
-import { compareText } from './compare-text.js';
+import type { CategorizedLineItem, Order } from '../../models/order';
+import { getCatalog } from '../catalog/index';
+import { compareText } from './compare-text';
 
 /**
  * Combine repeated line items (BRX-006) and look up each product category (BR-010).

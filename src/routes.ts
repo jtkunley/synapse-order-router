@@ -6,10 +6,10 @@ import {
   handleDocs,
   handleDocsBundle,
   handleDocsCss,
-} from './controllers/docs.js';
-import { handleOpenApi, openApiPath } from './controllers/openapi.js';
-import { handleOrderRouting, orderRoutingPath } from './controllers/order-routing.js';
-import { jsonBody } from './middleware/json-body.js';
+} from './controllers/docs';
+import { handleOpenApi, openApiPath } from './controllers/openapi';
+import { handleOrderRouting, orderRoutingPath } from './controllers/order-routing';
+import { jsonBody } from './middleware/json-body';
 
 export function addRoutes(app: Express): void {
   app.get(openApiPath, handleOpenApi);

@@ -1,7 +1,7 @@
-import type { CategorizedLineItem } from '../../models/order.js';
-import type { Shipment } from '../../models/routing-decision.js';
-import type { RoutingPlan } from '../../models/routing-plan.js';
-import { compareText } from './compare-text.js';
+import type { CategorizedLineItem } from '../../models/order';
+import type { Shipment } from '../../models/routing-decision';
+import type { RoutingPlan } from '../../models/routing-plan';
+import { compareText } from './compare-text';
 
 /**
  * Assign each line item, with its full quantity, to one supplier in the selected plan

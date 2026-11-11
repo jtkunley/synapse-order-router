@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import type { Request, Response } from 'express';
-import { openApiPath } from './openapi.js';
+import { openApiPath } from './openapi';
 
 /** Interactive Swagger UI for the OpenAPI document at `openApiPath`. */
 export const docsPath = '/docs';

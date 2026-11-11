@@ -27,13 +27,13 @@ const {
   };
 });
 
-vi.mock('../../src/app.js', () => ({ createApp }));
-vi.mock('../../src/config/env.js', () => ({ getEnv }));
-vi.mock('../../src/runtime/fatal-error.js', () => ({
+vi.mock('../../src/app', () => ({ createApp }));
+vi.mock('../../src/config/env', () => ({ getEnv }));
+vi.mock('../../src/runtime/fatal-error', () => ({
   enableServerErrorHandling,
   handleFatalError,
 }));
-vi.mock('../../src/runtime/graceful-shutdown.js', () => ({ enableGracefulShutdown }));
+vi.mock('../../src/runtime/graceful-shutdown', () => ({ enableGracefulShutdown }));
 
 describe('main', () => {
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe('main', () => {
 
   it('loads config, builds the app, listens, and wires runtime handlers', async () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
-    await import('../../src/main.js');
+    await import('../../src/main');
 
     expect(getEnv).toHaveBeenCalled();
     expect(createApp).toHaveBeenCalledOnce();
@@ -63,7 +63,7 @@ describe('main', () => {
     getEnv.mockImplementation(() => {
       throw new Error('bad port');
     });
-    await import('../../src/main.js');
+    await import('../../src/main');
     expect(handleFatalError).toHaveBeenCalledWith(expect.any(Error));
   });
 });

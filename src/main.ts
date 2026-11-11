@@ -1,7 +1,7 @@
-import { createApp } from './app.js';
-import { getEnv } from './config/env.js';
-import { enableServerErrorHandling, handleFatalError } from './runtime/fatal-error.js';
-import { enableGracefulShutdown } from './runtime/graceful-shutdown.js';
+import { createApp } from './app';
+import { getEnv } from './config/env';
+import { enableServerErrorHandling, handleFatalError } from './runtime/fatal-error';
+import { enableGracefulShutdown } from './runtime/graceful-shutdown';
 
 try {
   const { port } = getEnv();

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { LineItem, Order } from '../../../src/models/order.js';
-import type { RoutingDecision, Shipment } from '../../../src/models/routing-decision.js';
-import type { Supplier } from '../../../src/models/supplier.js';
-import { setCatalog } from '../../../src/services/catalog/catalog-store.js';
-import { routeOrder } from '../../../src/services/routing/index.js';
+import type { LineItem, Order } from '../../../src/models/order';
+import type { RoutingDecision, Shipment } from '../../../src/models/routing-decision';
+import type { Supplier } from '../../../src/models/supplier';
+import { setCatalog } from '../../../src/services/catalog/catalog-store';
+import { routeOrder } from '../../../src/services/routing/index';
 import {
   LOCAL_ZIPS,
   REMOTE_ZIPS,
   makeCatalog,
   makeOrder,
   makeSupplier,
-} from '../../helpers/catalog.js';
+} from '../../helpers/catalog';
 
 const PRODUCTS = { 'WC-1': 'wheelchair', 'OX-1': 'oxygen', 'CP-1': 'cpap' };
 

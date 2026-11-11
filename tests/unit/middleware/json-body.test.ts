@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { jsonBody } from '../../../src/middleware/json-body.js';
+import { jsonBody } from '../../../src/middleware/json-body';
 
 describe('jsonBody', () => {
   it('parses JSON bodies, including non-object values when strict is false', async () => {
