@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   failureSchema,
+  getFailureResponse,
+  getSuccessResponse,
   responseSchema,
-  toRoutingResponse,
 } from '../../../src/models/routing-response';
 import { makeSupplier } from '../../helpers/catalog';
 
@@ -50,9 +51,9 @@ describe('responseSchema', () => {
   });
 });
 
-describe('toRoutingResponse', () => {
+describe('getSuccessResponse', () => {
   // BR-023, BRX-014
-  it('translates shipments into supplier groups with each line item’s fulfillment mode', () => {
+  it('builds supplier groups from shipments with each line item’s fulfillment mode', () => {
     const supplier = makeSupplier({
       id: 'SUP-1',
       name: 'Supplier',
@@ -60,16 +61,13 @@ describe('toRoutingResponse', () => {
     });
 
     expect(
-      toRoutingResponse({
-        feasible: true,
-        shipments: [
-          {
-            supplier,
-            fulfillmentMode: 'mail_order',
-            lineItems: [{ productCode: 'WC-1', quantity: 2, category: 'wheelchair' }],
-          },
-        ],
-      }),
+      getSuccessResponse([
+        {
+          supplier,
+          fulfillmentMode: 'mail_order',
+          lineItems: [{ productCode: 'WC-1', quantity: 2, category: 'wheelchair' }],
+        },
+      ]),
     ).toEqual({
       feasible: true,
       routing: [
@@ -88,14 +86,14 @@ describe('toRoutingResponse', () => {
       ],
     });
   });
+});
 
+describe('getFailureResponse', () => {
   // BR-024
-  it('translates an infeasible decision into its errors', () => {
-    expect(toRoutingResponse({ feasible: false, errors: ['Unknown product code: NOPE.'] })).toEqual(
-      {
-        feasible: false,
-        errors: ['Unknown product code: NOPE.'],
-      },
-    );
+  it('builds an infeasible response from its errors', () => {
+    expect(getFailureResponse(['Unknown product code: NOPE.'])).toEqual({
+      feasible: false,
+      errors: ['Unknown product code: NOPE.'],
+    });
   });
 });
