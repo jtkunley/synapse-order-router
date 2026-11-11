@@ -24,7 +24,7 @@ Synapse Health multi-supplier order router. Prefer small, focused changes that m
 - One concern per file when practical (endpoint, middleware, model).
 - Use the built-in console for lightweight process logging in server/runtime paths.
 - Register endpoints only in `routes.ts`; error handler last in `app.ts`.
-- Prefer exact dependency versions; match existing TypeScript/ESM style (`.js` import specifiers).
+- Prefer exact dependency versions; match existing TypeScript/ESM style (extensionless relative imports; `npm run build` adds `.js` to `dist/` via `tsc-alias`).
 - Do not edit `AI_PROMPTS.md`; it is maintained by hand.
 - When committing, split outstanding changes into gradual commits by concern (e.g. one service split, then controller wiring, then tests/docs)—never one catch-all commit for unrelated work.
 
