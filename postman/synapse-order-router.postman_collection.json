@@ -1,0 +1,498 @@
+{
+  "info": {
+    "name": "Synapse Order Router",
+    "description": "Manual test requests for `POST /api/route` against the real catalog in `data/`. Every route response is HTTP 200; check `feasible`. Set `baseUrl` to the running server.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Successful routing",
+      "description": "Feasible orders routed against the real catalog.",
+      "item": [
+        {
+          "name": "01 Two categories from one supplier (ORD-001)",
+          "request": {
+            "description": "Sample order ORD-001: a wheelchair and an oxygen concentrator at ZIP 10015 with mail order off. Expect `feasible: true` with one shipment from SUP-0636, both line items `local` (BR-016, BR-023).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"ORD-001\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"ORD-001\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "02 Four categories from one supplier (ORD-002)",
+          "request": {
+            "description": "Sample order ORD-002: four product categories at ZIP 77059 with mail order off. Expect one shipment from SUP-0928 covering all four line items (BR-016).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"ORD-002\",\"customer_zip\":\"77059\",\"mail_order\":false,\"items\":[{\"product_code\":\"HB-FUL-018\",\"quantity\":1},{\"product_code\":\"PL-ELEC-043\",\"quantity\":1},{\"product_code\":\"CM-BED-048\",\"quantity\":1},{\"product_code\":\"BP-AUTO-077\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"ORD-002\",\"customer_zip\":\"77059\",\"mail_order\":false,\"items\":[{\"product_code\":\"HB-FUL-018\",\"quantity\":1},{\"product_code\":\"PL-ELEC-043\",\"quantity\":1},{\"product_code\":\"CM-BED-048\",\"quantity\":1},{\"product_code\":\"BP-AUTO-077\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "03a Mail order on (ORD-003)",
+          "request": {
+            "description": "Sample order ORD-003 at leading-zero ZIP 02130 with mail order on. Expect SUP-023 with every line item `mail_order`: a clearly higher satisfaction score beats local preference (BR-008, BR-013, BR-017, BR-019).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"ORD-003\",\"customer_zip\":\"02130\",\"mail_order\":true,\"items\":[{\"product_code\":\"CP-STD-031\",\"quantity\":1},{\"product_code\":\"CP-MSK-FF-035\",\"quantity\":2},{\"product_code\":\"NB-COMP-039\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"ORD-003\",\"customer_zip\":\"02130\",\"mail_order\":true,\"items\":[{\"product_code\":\"CP-STD-031\",\"quantity\":1},{\"product_code\":\"CP-MSK-FF-035\",\"quantity\":2},{\"product_code\":\"NB-COMP-039\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "03b Mail order off (ORD-003)",
+          "request": {
+            "description": "The same order as 03a with mail order off. Only suppliers serving ZIP 02130 qualify, so expect SUP-0960 with every line item `local` (BR-012).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"ORD-003\",\"customer_zip\":\"02130\",\"mail_order\":false,\"items\":[{\"product_code\":\"CP-STD-031\",\"quantity\":1},{\"product_code\":\"CP-MSK-FF-035\",\"quantity\":2},{\"product_code\":\"NB-COMP-039\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"ORD-003\",\"customer_zip\":\"02130\",\"mail_order\":false,\"items\":[{\"product_code\":\"CP-STD-031\",\"quantity\":1},{\"product_code\":\"CP-MSK-FF-035\",\"quantity\":2},{\"product_code\":\"NB-COMP-039\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "04 Repeated line items are combined",
+          "request": {
+            "description": "Two lines for WC-STD-001 (quantities 1 and 2). Expect a single WC-STD-001 line item with quantity 3, assigned to one supplier (BRX-006, BRX-007, BR-027).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"DUP-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"WC-STD-001\",\"quantity\":2}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"DUP-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"WC-STD-001\",\"quantity\":2}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "05 Whitespace trimmed, extra fields ignored",
+          "request": {
+            "description": "Order ID, ZIP, and product code padded with spaces, plus an unknown `priority` field. Expect normal routing: whitespace is trimmed and the extra field has no effect (BRX-016, BR-009).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"  TRIM-1 \",\"customer_zip\":\" 10015 \",\"mail_order\":false,\"items\":[{\"product_code\":\" WC-STD-001 \",\"quantity\":1}],\"priority\":\"rush\"}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"  TRIM-1 \",\"customer_zip\":\" 10015 \",\"mail_order\":false,\"items\":[{\"product_code\":\" WC-STD-001 \",\"quantity\":1}],\"priority\":\"rush\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Location and mail order",
+      "description": "ZIPs below 00100 have no supplier serving them locally in the real catalog.",
+      "item": [
+        {
+          "name": "06 No local supplier, mail order off",
+          "request": {
+            "description": "ZIP 00050 with mail order off. No supplier serves this ZIP, so expect `feasible: false` with one \"No eligible supplier\" error per line item and no partial routing (BR-012, BR-026, BRX-009).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"GEO-1\",\"customer_zip\":\"00050\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"GEO-1\",\"customer_zip\":\"00050\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "07 No local supplier, mail order on",
+          "request": {
+            "description": "The same order as 06 with mail order on. Expect SUP-047 with both line items `mail_order` (BR-013, BRX-014).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"GEO-2\",\"customer_zip\":\"00050\",\"mail_order\":true,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"GEO-2\",\"customer_zip\":\"00050\",\"mail_order\":true,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"OX-PORT-024\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders that cannot be routed",
+      "description": "Valid requests that produce an infeasible routing decision.",
+      "item": [
+        {
+          "name": "08 Unknown product codes",
+          "request": {
+            "description": "Two unknown product codes alongside a valid one. Expect `feasible: false` with one \"Unknown product code\" error each and no partial routing (BRX-013, BRX-009, BR-026).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"UNK-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"NOPE-1\",\"quantity\":1},{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"NOPE-2\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"UNK-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"NOPE-1\",\"quantity\":1},{\"product_code\":\"WC-STD-001\",\"quantity\":1},{\"product_code\":\"NOPE-2\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "09 Lowercase product code",
+          "request": {
+            "description": "Product codes match exactly after trimming, so `wc-std-001` is reported as an unknown product code (BRX-013).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"CASE-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"wc-std-001\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"CASE-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"wc-std-001\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "10 Combined quantity too large",
+          "request": {
+            "description": "Two WC-STD-001 lines whose total exceeds the largest exactly representable integer. Expect \"Total quantity for WC-STD-001 is too large.\" (BRX-019).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"QTY-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":9007199254740991},{\"product_code\":\"WC-STD-001\",\"quantity\":1}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"QTY-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[{\"product_code\":\"WC-STD-001\",\"quantity\":9007199254740991},{\"product_code\":\"WC-STD-001\",\"quantity\":1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid input",
+      "description": "Every response is still HTTP 200 with `feasible: false` (BR-022, BR-024).",
+      "item": [
+        {
+          "name": "11 Several invalid fields at once",
+          "request": {
+            "description": "Empty order ID, four-digit ZIP, string mail-order flag, empty product code, and zero quantity. Expect five errors reported together (BR-025, BR-026, BRX-010).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"\",\"customer_zip\":\"1234\",\"mail_order\":\"yes\",\"items\":[{\"product_code\":\"\",\"quantity\":0}]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"\",\"customer_zip\":\"1234\",\"mail_order\":\"yes\",\"items\":[{\"product_code\":\"\",\"quantity\":0}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "12 Empty items list",
+          "request": {
+            "description": "An order with no line items. Expect \"items: Order must include at least one line item.\" (BR-025).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{\"order_id\":\"EMPTY-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[]}'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"order_id\":\"EMPTY-1\",\"customer_zip\":\"10015\",\"mail_order\":false,\"items\":[]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "13 Malformed JSON",
+          "request": {
+            "description": "A body that is not valid JSON. Expect \"Request body must contain valid JSON.\" (BR-024).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '{bad json'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{bad json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "14 JSON array as the body",
+          "request": {
+            "description": "Valid JSON that is not an order object. Expect \"order: Invalid input: expected object, received array\" (BR-024).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: application/json' \\\n  -d '[]'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        },
+        {
+          "name": "15 Wrong content type",
+          "request": {
+            "description": "A `text/plain` body is not parsed as JSON. Expect an `order: …` validation error (BR-024).\n\n```bash\ncurl -X POST http://localhost:3000/api/route -H 'Content-Type: text/plain' \\\n  -d 'hello'\n```",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "hello"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/route",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "route"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Other endpoints",
+      "description": "Documentation endpoints.",
+      "item": [
+        {
+          "name": "16a OpenAPI document",
+          "request": {
+            "description": "Returns the OpenAPI 3.1 document. Expect HTTP 200.\n\n```bash\ncurl http://localhost:3000/openapi.json\n```",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/openapi.json",
+              "host": ["{{baseUrl}}"],
+              "path": ["openapi.json"]
+            }
+          }
+        },
+        {
+          "name": "16b API docs page",
+          "request": {
+            "description": "Serves the Swagger UI docs page. Expect HTTP 200.\n\n```bash\ncurl http://localhost:3000/docs\n```",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["docs"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
